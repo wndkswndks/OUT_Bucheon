@@ -1,0 +1,7 @@
+led_control_out/Stdriver/
+led_control_out/workspace/Debug/Obj/LightRGBWDrv.pbi
+led_control_out/workspace/
+*.md
+*.docx
+*.gitattributes
+*.pdf
