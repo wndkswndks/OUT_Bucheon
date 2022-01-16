@@ -75,7 +75,7 @@ void Delay(uint32_t cnt)
 }
 extern uint32_t TIM1COUNTER;
 
-void main(void)//////////ttt///eee////lllllqwer
+void main(void)//////////ttt///eee////lllllqwer///
 {
 
   CLK_DeInit();
