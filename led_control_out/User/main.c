@@ -97,7 +97,6 @@ void main(void)//////////ttt///eee////lllllqwer///gg
 
   
   TIM4_Config();
- TIM1RGBWCtrl(0,0,0,0);//50% PWM  test
   while (1)
   {
     button_config2();//
