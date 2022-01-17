@@ -34,8 +34,11 @@
 /* Private variables ---------------------------------------------------------*/
 uint32_t TIM1COUNTER = 0;
 uint8_t SwitchDelayFlag = 0;
-
-
+extern uint32_t led_on_time;
+extern uint32_t led_time_cnt;
+extern uint8_t led_on_off_flag;
+extern uint8_t led_operate_flag;
+extern uint8_t infinity_flag;
 uint8_t RX_TX_BUFF =0;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -236,9 +239,7 @@ INTERRUPT_HANDLER(TIM1_UPD_OVF_TRG_BRK_IRQHandler, 11)
 #if 1
   if(TIM1_GetITStatus(TIM1_IT_UPDATE) == SET)
   {
-    //TIM1COUNTER++;
-  //  if(TIM1COUNTER > 50)
-     // SwitchDelayFlag = 1;
+
   }
 #endif
   TIM1_ClearITPendingBit(TIM1_IT_UPDATE);
@@ -483,10 +484,25 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */ 
-//  	if(WWDG_GetCounter()==0)
-//	{
-//		WWDG_SWReset();
-//	}
+  	if(WWDG_GetCounter()==0)
+	{
+		WWDG_SWReset();
+	}
+
+	if(led_on_off_flag && infinity_flag==0)
+	{
+		led_time_cnt++;
+		if(led_time_cnt > led_on_time)
+		{
+			led_time_cnt = 0;
+			led_on_off_flag = 0;
+			led_operate_flag = 1;
+		}
+	}
+	else if(infinity_flag==1)
+	{
+		
+	}
    
    TIM1COUNTER++;
   TIM4_ClearITPendingBit(TIM4_IT_UPDATE); 
