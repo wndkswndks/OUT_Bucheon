@@ -29,7 +29,7 @@ void TIM1_Counter_Init()
 
 }
 
-void TIM1RGBWCtrl(uint8_t RValue, uint8_t GValue, uint8_t BValue, uint8_t WValue)
+void LED_Pwm_ctrl(uint8_t BValue, uint8_t WValue)
 {
   TIM1_SetCompare3(BValue);
   TIM1_SetCompare4(WValue);

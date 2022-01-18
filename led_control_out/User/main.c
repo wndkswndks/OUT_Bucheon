@@ -25,72 +25,25 @@
 #include "main.h"
 #include "LightRGBWDrv.h"
 /* Private defines -----------------------------------------------------------*/
-//uint8_t USART1_ReceiveDataBuf[32];
-
-typedef enum
-{
-	STEP1,
-	STEP2,
-	STEP3,
-	STEP4,
-	STEP5,
-	STEP6,
-	STEP7,
-	STEP8,
-	STEP9,
-	STEP10,
-} STEP_E;
-typedef enum
-{
-	CCR1_LED,
-	CCR2_LED,
-} CCR_E;
-#define LIGHT_DEGREE 15
-#define WINDOW_VALUE        97
-#define COUNTER_INIT       104
-
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
-void button_config2();
-void shot_push_config();
-void long_push_config();
-
-void Add_CRR(uint8_t ccr_led, uint16_t add_value);
-uint32_t HAL_GetTick();
-
-void TIM4_Config(void);
-uint32_t Time_taken(uint32_t nowtime,uint32_t prevtime);
-void PWR_Config();
 
 
-void Delay(uint32_t cnt)
-{
-  uint32_t count = 500;
-  for(; cnt > 0;cnt --)
-  {
-    for(; count > 0;count --)
-    {
-    }
-  }
-}
+
+
 extern uint32_t TIM1COUNTER;
-
 void main(void)//////////ttt///eee////lllllqwer
 {
 
   CLK_DeInit();
   /* Initialization of the clock ;Clock divider to HSI/1 */
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
-  //CLK_HSECmd(ENABLE);
- // CLK_HSICmd(ENABLE);
- //
+
   TIM1_Counter_Init();//4PWM 
   TIM4_Config();
- TIM1RGBWCtrl(0,0,0,0);//50% PWM  test
+  LED_Pwm_ctrl(0,0);//50% PWM  test
   while (1)
   {
-    button_config2();//
-    PWR_Config();
+    Led_Pwm_config();//
+    Low_power_Config();
 
 	//WWDG_SetCounter(125);
 
@@ -99,76 +52,82 @@ void main(void)//////////ttt///eee////lllllqwer
 }
 
 
-uint16_t led_step1 = 0;
-uint16_t led_step2 = 0;
 
 uint8_t led_status = STEP1;
 
-void button_config2()////////
-{
-	uint32_t term_time = 0;
-	uint8_t puch_status = 0;
-	static uint8_t puch_flag = 0;
-	static uint32_t puch_time = 0;
-	static uint32_t relese_time = 0;
-	
-	uint32_t now_time = 0;
-	static uint32_t prv_time = 0;
-	static uint32_t chattering_check_time = 0;
-	uint16_t long_define_time = 500;
-	
-	if(!GPIO_ReadInputPin(GPIOD, GPIO_PIN_2)) puch_status = 1; 
-	else puch_status = 0;
-//================================	
-	if(puch_status && !puch_flag)
-	{
-		puch_time = HAL_GetTick();
-		prv_time = puch_time;
-		puch_flag = SET;
-	}
-	else if(puch_status && puch_flag)
-	{
-		if(led_step1 ==16 ||led_step2 ==16 ) long_define_time = 3000;
-		else long_define_time = 500;
 
-		now_time = HAL_GetTick();
-		if(Time_taken(now_time,prv_time) > long_define_time)
+void Led_Pwm_config()////////
+{
+	uint16_t led_bright_step1 = 0;
+	uint16_t led_bright_step2 = 0;
+	
+	uint8_t is_holding_button = 0;
+	static uint8_t holding_start = 0;
+
+	uint32_t holdig_term_ms = 0;
+	static uint32_t holding_start_time_ms = 0;
+	static uint32_t holding_end_time_ms = 0;
+	uint32_t now_time_ms = 0;
+	static uint32_t prv_time_ms = 0;
+	static uint32_t continuity_push_prevention_ms = 0;
+	uint16_t long_define_time_ms = 500;
+
+
+	led_bright_step1 = TIM1_GetCapture3()/LIGHT_DEGREE;
+	led_bright_step2 = TIM1_GetCapture4()/LIGHT_DEGREE;
+
+	if(!GPIO_ReadInputPin(BUTTON_PORT, BUTTON_PIN)) is_holding_button = SET; 
+	else is_holding_button = 0;
+//================================	
+	if(is_holding_button && !holding_start)
+	{
+		holding_start_time_ms = HAL_GetTick();
+		prv_time_ms = holding_start_time_ms;
+		holding_start = SET;
+	}
+	else if(is_holding_button && holding_start)
+	{
+		if(led_bright_step1 ==LAST_LED_BRIGHT_STEP ||led_bright_step2 ==LAST_LED_BRIGHT_STEP ) 
+			long_define_time_ms = 3000;
+		else 
+			long_define_time_ms = 500;
+
+		now_time_ms = HAL_GetTick();
+		if(Time_taken(now_time_ms,prv_time_ms) > long_define_time_ms)
 		{
-			long_push_config();
-			prv_time = now_time;
+			long_holding_config();
+			prv_time_ms = now_time_ms;
 		}
 	}	
-	else if(!puch_status && puch_flag)
+	else if(!is_holding_button && holding_start)
 	{
-		if(Time_taken(HAL_GetTick(),prv_time) <30) return;	
-		if(Time_taken(HAL_GetTick(),now_time) <30) return;		
-		relese_time = HAL_GetTick();
-		puch_flag = RESET;
+		if(Time_taken(HAL_GetTick(),prv_time_ms) <30) return;	// up chettering prevention
+		if(Time_taken(HAL_GetTick(),now_time_ms) <30) return;	// up chettering prevention
+		
+		holding_end_time_ms = HAL_GetTick();
+		holding_start = RESET;
 	}
 //================================	
 
-	if(puch_time && relese_time)
-	{
-		
-		term_time = Time_taken(relese_time,puch_time);
-		if(Time_taken(HAL_GetTick(),chattering_check_time) > 200)
+	if(holding_start_time_ms && holding_end_time_ms)
+	{	
+		holdig_term_ms = Time_taken(holding_end_time_ms,holding_start_time_ms);
+		if(Time_taken(HAL_GetTick(),continuity_push_prevention_ms) > 200)
 		{
-			if(30 < term_time && term_time < 500 )
+			if(30 < holdig_term_ms && holdig_term_ms < 500 )
 			{
-				shot_push_config();
+				short_holding_config();
 			}
 		}
-		puch_time = 0;
-		relese_time = 0;
-
-		chattering_check_time = HAL_GetTick();
+		holding_start_time_ms = 0;
+		holding_end_time_ms = 0;
+		continuity_push_prevention_ms = HAL_GetTick();
 	}
 	
-	led_step1 = TIM1_GetCapture3()/LIGHT_DEGREE;
-	led_step2 = TIM1_GetCapture4()/LIGHT_DEGREE;
+
 }
 
-void shot_push_config()
+void short_holding_config()
 {
 	static uint8_t oneflag = 0;
 	static uint8_t step = STEP1;
@@ -223,25 +182,25 @@ void shot_push_config()
 
 }
 
-void long_push_config()
+void long_holding_config()
 {
 	switch(led_status)
 	{
 		case STEP1:
-			Add_CRR(CCR1_LED, LIGHT_DEGREE);			
+			Add_Led_bright(CCR1_LED, LIGHT_DEGREE);			
 		break;
 
 		case STEP2:
-			Add_CRR(CCR2_LED, LIGHT_DEGREE);
+			Add_Led_bright(CCR2_LED, LIGHT_DEGREE);
 		break;
 		
 		case STEP3:
-			Add_CRR(CCR1_LED, LIGHT_DEGREE);
-			Add_CRR(CCR2_LED, LIGHT_DEGREE);
+			Add_Led_bright(CCR1_LED, LIGHT_DEGREE);
+			Add_Led_bright(CCR2_LED, LIGHT_DEGREE);
 		break;
 	}
 }
-void Add_CRR(uint8_t ccr_led, uint16_t add_value)
+void Add_Led_bright(uint8_t ccr_led, uint16_t add_value)
 {
 	uint16_t data = 0;
 	
@@ -250,33 +209,37 @@ void Add_CRR(uint8_t ccr_led, uint16_t add_value)
 		case CCR1_LED:
 		data = TIM1_GetCapture3();
 		data += add_value;
-		if(data>LIGHT_DEGREE*16) TIM1_SetCompare3(add_value); 
-		else TIM1_SetCompare3(data);
+		if(data>LIGHT_DEGREE*LAST_LED_BRIGHT_STEP) 
+			TIM1_SetCompare3(LIGHT_DEGREE*FIRST_LED_BRIGHT_STEP); 
+		else 
+			TIM1_SetCompare3(data);
 		break;
 
 		case CCR2_LED:
 		data = TIM1_GetCapture4();
 		data += add_value;
-		if(data>LIGHT_DEGREE*16) TIM1_SetCompare4(add_value);
-		else TIM1_SetCompare4(data);
+		if(data>LIGHT_DEGREE*LAST_LED_BRIGHT_STEP) 
+			TIM1_SetCompare4(LIGHT_DEGREE*FIRST_LED_BRIGHT_STEP);
+		else 
+			TIM1_SetCompare4(data);
 		break;
 	}
 }
 
-void PWR_Config()
+void Low_power_Config()
 {
-	static uint32_t last_on_time = 0;
+	static uint32_t last_on_time_ms = 0;
 	if(TIM1_GetCapture3() == 0 && TIM1_GetCapture4() == 0)
     {
-		if(Time_taken(HAL_GetTick(),last_on_time)>60000) 
+		if(Time_taken(HAL_GetTick(),last_on_time_ms)>60000) 
 		{
-			last_on_time = HAL_GetTick();
+			last_on_time_ms = HAL_GetTick();
 			halt();
 		}
     }
     else
     {
-		last_on_time = HAL_GetTick();
+		last_on_time_ms = HAL_GetTick();
     }
 }
 
@@ -315,6 +278,18 @@ uint32_t Time_taken(uint32_t nowtime,uint32_t prevtime)
 	else return ((nowtime+0xFFFF) - prevtime);
 	
 }
+
+void Delay(uint32_t cnt)
+{
+  uint32_t count = 500;
+  for(; cnt > 0;cnt --)
+  {
+    for(; count > 0;count --)
+    {
+    }
+  }
+}
+
 #ifdef USE_FULL_ASSERT
 
 /**
