@@ -23,7 +23,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm8s_it.h"
-
+#include "main.h"
 /** @addtogroup Template_Project
   * @{
   */
@@ -33,13 +33,8 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 uint32_t TIM1COUNTER = 0;
-uint8_t SwitchDelayFlag = 0;
-extern uint32_t led_on_time;
-extern uint32_t led_time_cnt;
-extern uint8_t led_on_off_flag;
-extern uint8_t led_operate_flag;
-extern uint8_t infinity_flag;
-uint8_t RX_TX_BUFF =0;
+
+extern LED_T m_led;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -153,13 +148,13 @@ INTERRUPT_HANDLER(EXTI_PORTC_IRQHandler, 5)
   * @param  None
   * @retval None
   */
-  uint8_t button_it = 0;
+
 INTERRUPT_HANDLER(EXTI_PORTD_IRQHandler, 6)
 {
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */
-  button_it++;
+
 }
 
 /**
@@ -489,17 +484,17 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
 		WWDG_SWReset();
 	}
 
-	if(led_on_off_flag && infinity_flag==0)
+	if(m_led.on_status && m_led.eternul==0)
 	{
-		led_time_cnt++;
-		if(led_time_cnt > led_on_time)
+		m_led.time_cnt++;
+		if(m_led.time_cnt > m_led.on_time)
 		{
-			led_time_cnt = 0;
-			led_on_off_flag = 0;
-			led_operate_flag = 1;
+			m_led.time_cnt = 0;
+			m_led.on_status = 0;
+			m_led.operating = 1;
 		}
 	}
-	else if(infinity_flag==1)
+	else if(m_led.eternul==1)
 	{
 		
 	}

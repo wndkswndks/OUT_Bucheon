@@ -25,66 +25,19 @@
 #include "main.h"
 #include "LightRGBWDrv.h"
 /* Private defines -----------------------------------------------------------*/
-//uint8_t USART1_ReceiveDataBuf[32];
 
-typedef enum
-{
-	STEP1,
-	STEP2,
-	STEP3,
-	STEP4,
-	STEP5,
-	STEP6,
-	STEP7,
-	STEP8,
-	STEP9,
-	STEP10,
-} STEP_E;
-typedef enum
-{
-	CCR1_LED,
-	CCR2_LED,
-} CCR_E;
-#define LIGHT_DEGREE 15
-#define WINDOW_VALUE        97
-#define COUNTER_INIT       104
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-void button_config2();
-void shot_push_config();
 
-uint32_t HAL_GetTick();
+LED_T m_led;
 
-void TIM4_Config(void);
-uint32_t Time_taken(uint32_t nowtime,uint32_t prevtime);
-void PWR_Config();
+BUTTON_T m_button;
 
 
-void Delay(uint32_t cnt)
-{
-  uint32_t count = 500;
-  for(; cnt > 0;cnt --)
-  {
-    for(; count > 0;count --)
-    {
-    }
-  }
-}
 extern uint32_t TIM1COUNTER;
 
-uint8_t led_operate_flag = 0;
-uint8_t led_on_off_flag = 0;
-uint32_t led_on_time = 0;
-uint32_t led_time_cnt = 0;
-
-
-uint8_t button_status_cnt = 0;
-
-
-uint8_t button_step = STEP1;
-uint32_t push_last_time = 0;
-void main(void)//////////ttt///eee////lllllqwer///gg
+void main(void)
 {
 
   CLK_DeInit();
@@ -95,156 +48,132 @@ void main(void)//////////ttt///eee////lllllqwer///gg
  //
   TIM1_Counter_Init();//4PWM 
 
+  m_button.step = STEP1;
   
   TIM4_Config();
   while (1)
   {
-    button_config2();//
-    
+    Led_time_config();//
     PWR_Config();
-
 	WWDG_SetCounter(125);
-
-
-	if(Time_taken(HAL_GetTick(),push_last_time)>1000 && button_step != STEP1)
-	{
-		button_step = STEP1;
-	}
-
-	
-	if(led_operate_flag)
-	{
-		led_operate_flag = 0;
-		
-		if(led_on_off_flag)
-		{
-			GPIO_WriteHigh(GPIOC,GPIO_PIN_3);
-  			GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
-		}
-		else
-		{
-			GPIO_WriteLow(GPIOC,GPIO_PIN_3);
-  			GPIO_WriteLow(GPIOC,GPIO_PIN_4);
-		}
-	}
-
-
+	Button_step_reset();
+	Led_oprating_config();
   }
 }
 
 
-void button_config2()////////
+void Led_time_config()////////
 {
-	uint32_t term_time = 0;
-	uint8_t puch_status = 0;
-	static uint8_t puch_flag = 0;
-	static uint32_t puch_time = 0;
-	static uint32_t relese_time = 0;
+	uint32_t holdig_term_ms = 0;
+	uint8_t is_holding_button = 0;
+	static uint8_t holding_start = 0;
+	static uint32_t holding_start_time_ms = 0;
+	static uint32_t holding_end_time_ms = 0;
 	
-	static uint32_t prv_time = 0;
-	static uint32_t chattering_check_time = 0;
+	static uint32_t prv_time_ms = 0;
+	static uint32_t continuity_push_prevention_ms = 0;
 	
-	if(!GPIO_ReadInputPin(GPIOD, GPIO_PIN_2)) puch_status = 1; 
-	else puch_status = 0;
+	if(!GPIO_ReadInputPin(GPIOD, GPIO_PIN_2)) is_holding_button = 1; 
+	else is_holding_button = 0;
 //================================	
-	if(puch_status && !puch_flag)
+	if(is_holding_button && !holding_start)
 	{
-		puch_time = HAL_GetTick();
-		prv_time = puch_time;
-		puch_flag = SET;
+		holding_start_time_ms = HAL_GetTick();
+		prv_time_ms = holding_start_time_ms;
+		holding_start = SET;
 	}
-	else if(!puch_status && puch_flag)
+	else if(!is_holding_button && holding_start)
 	{
-		if(Time_taken(HAL_GetTick(),prv_time) <30) return;		
-		relese_time = HAL_GetTick();
-		puch_flag = RESET;
+		if(Time_taken(HAL_GetTick(),prv_time_ms) <30) return;		
+		holding_end_time_ms = HAL_GetTick();
+		holding_start = RESET;
 	}
 //================================	
 
-	if(puch_time && relese_time)
+	if(holding_start_time_ms && holding_end_time_ms)
 	{
 		
-		term_time = Time_taken(relese_time,puch_time);
-		if(Time_taken(HAL_GetTick(),chattering_check_time) > 150)
+		holdig_term_ms = Time_taken(holding_end_time_ms,holding_start_time_ms);
+		if(Time_taken(HAL_GetTick(),continuity_push_prevention_ms) > 150)
 		{
-			if(30 < term_time && term_time < 500 )
+			if(30 < holdig_term_ms && holdig_term_ms < 500 )
 			{						
 				shot_push_config();
 			}
 		}
-		puch_time = 0;
-		relese_time = 0;
+		holding_start_time_ms = 0;
+		holding_end_time_ms = 0;
 
-		chattering_check_time = HAL_GetTick();
+		continuity_push_prevention_ms = HAL_GetTick();
 	}
 	
 }
 
-uint8_t infinity_flag = 0;
+
 void shot_push_config()
 {
 	
 
 	
-	switch(button_step)
+	switch(m_button.step)
 	{
 		case STEP1:
-				infinity_flag = 0;
-				if(led_on_off_flag != SET)
+				m_led.eternul = 0;
+				if(m_led.on_status != SET)
 				{
-					led_operate_flag = SET;
-					led_on_off_flag = SET;
+					m_led.operating = SET;
+					m_led.on_status = SET;
 				}
-				led_time_cnt = 0;
-				led_on_time = 3000;
-				button_step = STEP2;
+				m_led.time_cnt = 0;
+				m_led.on_time = 3000;
+				m_button.step = STEP2;
 		break;
 
 		case STEP2:
-				infinity_flag = 0;
-				led_on_time = 6000;
-				led_time_cnt = 0;
-				button_step = STEP3;
+				m_led.eternul = 0;
+				m_led.on_time = 6000;
+				m_led.time_cnt = 0;
+				m_button.step = STEP3;
 		break;
 
 		case STEP3:
-				infinity_flag = 1;
-				led_time_cnt = 0;
-				button_step = STEP4;
+				m_led.eternul = 1;
+				m_led.time_cnt = 0;
+				m_button.step = STEP4;
 			
 		break;
 
 		case STEP4:
-				infinity_flag = 0;
-				led_operate_flag = SET;
-				led_time_cnt = 0;
-				led_on_off_flag = RESET;
-				button_step = STEP1;
+				m_led.eternul = 0;
+				m_led.operating = SET;
+				m_led.time_cnt = 0;
+				m_led.on_status = RESET;
+				m_button.step = STEP1;
 			
 		break;
 
 	}
-	push_last_time = HAL_GetTick();
+	m_button.push_last_time = HAL_GetTick();
 
 }
 
 void PWR_Config()
 {
 	uint8_t gpio_test = 0;
-	static uint32_t last_on_time = 0;
+	static uint32_t last_on_time_ms = 0;
 
 	gpio_test = GPIO_ReadOutputData(GPIOC);
 	if(gpio_test == 0 )
     {
-		if(Time_taken(HAL_GetTick(),last_on_time)>60000) 
+		if(Time_taken(HAL_GetTick(),last_on_time_ms)>60000) 
 		{
-			last_on_time = HAL_GetTick();
+			last_on_time_ms = HAL_GetTick();
 			halt();
 		}
     }
     else
     {
-		last_on_time = HAL_GetTick();
+		last_on_time_ms = HAL_GetTick();
     }
 }
 
@@ -282,6 +211,44 @@ uint32_t Time_taken(uint32_t nowtime,uint32_t prevtime)
 	if(nowtime >=prevtime) return (nowtime - prevtime);
 	else return ((nowtime+0xFFFF) - prevtime);
 	
+}
+
+void Delay(uint32_t cnt)
+{
+  uint32_t count = 500;
+  for(; cnt > 0;cnt --)
+  {
+    for(; count > 0;count --)
+    {
+    }
+  }
+}
+
+void Button_step_reset()
+{
+	if(Time_taken(HAL_GetTick(),m_button.push_last_time)>1000 && m_button.step != STEP1)
+	{
+		m_button.step = STEP1;
+	}
+}
+
+void Led_oprating_config()
+{
+	if(m_led.operating)
+	{
+		m_led.operating = 0;
+		
+		if(m_led.on_status)
+		{
+			GPIO_WriteHigh(GPIOC,GPIO_PIN_3);
+  			GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
+		}
+		else
+		{
+			GPIO_WriteLow(GPIOC,GPIO_PIN_3);
+  			GPIO_WriteLow(GPIOC,GPIO_PIN_4);
+		}
+	}	
 }
 #ifdef USE_FULL_ASSERT
 
