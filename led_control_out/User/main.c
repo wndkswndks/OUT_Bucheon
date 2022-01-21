@@ -40,24 +40,52 @@ extern uint32_t TIM1COUNTER;
 void main(void)
 {
 
-  CLK_DeInit();
-  /* Initialization of the clock ;Clock divider to HSI/1 */
-  CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
-  //CLK_HSECmd(ENABLE);
- // CLK_HSICmd(ENABLE);
- //
-  TIM1_Counter_Init();//4PWM 
+//  CLK_DeInit();
+//  /* Initialization of the clock ;Clock divider to HSI/1 */
+//  CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
+//  //CLK_HSECmd(ENABLE);
+// // CLK_HSICmd(ENABLE);
+// //
+//  TIM1_Counter_Init();//4PWM 
+
+//  GPIO_DeInit(GPIOD);
+//
+//  CLK_DeInit();
+//	CLK_HSICmd(ENABLE);
+//	CLK_SYSCLKConfig(CLK_PRESCALER_HSIDIV1);  //8-8 still normal
+//	CLK_SYSCLKConfig(CLK_PRESCALER_CPUDIV1);
+//
+//	
+//  GPIO_DeInit(GPIOD);
 
   m_button.step = STEP1;
-  
-  TIM4_Config();
+  GPIO_Init(GPIOB,GPIO_PIN_4 , GPIO_MODE_OUT_PP_LOW_FAST);
+  GPIO_Init(GPIOB,GPIO_PIN_5 , GPIO_MODE_OUT_PP_LOW_FAST);
+  GPIO_Init(GPIOA,GPIO_PIN_3 , GPIO_MODE_OUT_PP_LOW_FAST);
+//  TIM4_Config();
   while (1)
   {
-    Led_time_config();//
-    PWR_Config();
-	WWDG_SetCounter(125);
-	Button_step_reset();
-	Led_oprating_config();
+  	GPIO_WriteHigh(GPIOB,GPIO_PIN_4);
+	Delay(10000);
+	GPIO_WriteLow(GPIOB,GPIO_PIN_4);
+	Delay(10000);
+
+	GPIO_WriteHigh(GPIOB,GPIO_PIN_5);
+	Delay(10000);
+	GPIO_WriteLow(GPIOB,GPIO_PIN_5);
+	Delay(10000);
+
+	GPIO_WriteHigh(GPIOA,GPIO_PIN_3);
+	Delay(10000);
+	GPIO_WriteLow(GPIOA,GPIO_PIN_3);
+	Delay(10000);
+
+	
+//    Led_time_config();//
+//    PWR_Config();
+//	WWDG_SetCounter(125);
+//	Button_step_reset();
+//	Led_oprating_config();
   }
 }
 
@@ -84,7 +112,7 @@ void Led_time_config()////////
 	}
 	else if(!is_holding_button && holding_start)
 	{
-		if(Time_taken(HAL_GetTick(),prv_time_ms) <30) return;		
+		if(Time_taken(HAL_GetTick(),prv_time_ms) <20) return;		
 		holding_end_time_ms = HAL_GetTick();
 		holding_start = RESET;
 	}
@@ -94,9 +122,9 @@ void Led_time_config()////////
 	{
 		
 		holdig_term_ms = Time_taken(holding_end_time_ms,holding_start_time_ms);
-		if(Time_taken(HAL_GetTick(),continuity_push_prevention_ms) > 150)
+		if(Time_taken(HAL_GetTick(),continuity_push_prevention_ms) > 120)
 		{
-			if(30 < holdig_term_ms && holdig_term_ms < 500 )
+			if(20 < holdig_term_ms && holdig_term_ms < 500 )
 			{						
 				shot_push_config();
 			}
@@ -114,22 +142,19 @@ void shot_push_config()
 {
 	
 
-	
+	m_led.operating = SET;
 	switch(m_button.step)
 	{
-		case STEP1:
+		case STEP1:		
+				m_led.on_status = 1;	
 				m_led.eternul = 0;
-				if(m_led.on_status != SET)
-				{
-					m_led.operating = SET;
-					m_led.on_status = SET;
-				}
 				m_led.time_cnt = 0;
 				m_led.on_time = 3000;
 				m_button.step = STEP2;
 		break;
 
 		case STEP2:
+				m_led.on_status = 2;
 				m_led.eternul = 0;
 				m_led.on_time = 6000;
 				m_led.time_cnt = 0;
@@ -137,6 +162,7 @@ void shot_push_config()
 		break;
 
 		case STEP3:
+				m_led.on_status = 3;
 				m_led.eternul = 1;
 				m_led.time_cnt = 0;
 				m_button.step = STEP4;
@@ -144,12 +170,10 @@ void shot_push_config()
 		break;
 
 		case STEP4:
+				m_led.on_status = 4;
 				m_led.eternul = 0;
-				m_led.operating = SET;
 				m_led.time_cnt = 0;
-				m_led.on_status = RESET;
 				m_button.step = STEP1;
-			
 		break;
 
 	}
@@ -157,13 +181,15 @@ void shot_push_config()
 
 }
 
+uint8_t gpio_A = 0;
+uint8_t gpio_B = 0;
 void PWR_Config()
 {
-	uint8_t gpio_test = 0;
 	static uint32_t last_on_time_ms = 0;
-
-	gpio_test = GPIO_ReadOutputData(GPIOC);
-	if(gpio_test == 0 )
+	gpio_B = GPIO_ReadOutputData(GPIOB);
+	Delay(1000);
+	gpio_A = GPIO_ReadOutputData(GPIOA);
+	if(gpio_A == 0 )
     {
 		if(Time_taken(HAL_GetTick(),last_on_time_ms)>60000) 
 		{
@@ -238,15 +264,43 @@ void Led_oprating_config()
 	{
 		m_led.operating = 0;
 		
-		if(m_led.on_status)
+		switch (m_led.on_status)
 		{
-			GPIO_WriteHigh(GPIOC,GPIO_PIN_3);
-  			GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
-		}
-		else
-		{
-			GPIO_WriteLow(GPIOC,GPIO_PIN_3);
-  			GPIO_WriteLow(GPIOC,GPIO_PIN_4);
+			case 1:
+			GPIO_WriteLow(LED2_PORT,LED2_PIN);
+			Delay(1000);
+			GPIO_WriteLow(LED3_PORT,LED3_PIN);
+			Delay(1000);
+			GPIO_WriteHigh(LED1_PORT,LED1_PIN);
+			Delay(1000);
+			break;
+			
+			case 2:
+			GPIO_WriteLow(LED1_PORT,LED1_PIN);
+			Delay(1000);
+			GPIO_WriteLow(LED3_PORT,LED3_PIN);
+			Delay(1000);
+			GPIO_WriteHigh(LED2_PORT,LED2_PIN);
+			Delay(1000);
+			break;
+
+			case 3:
+			GPIO_WriteLow(LED1_PORT,LED1_PIN);
+			Delay(1000);
+			GPIO_WriteLow(LED2_PORT,LED2_PIN);
+			Delay(1000);
+			GPIO_WriteHigh(LED3_PORT,LED3_PIN);
+			Delay(1000);
+			break;
+
+			case 4:
+			GPIO_WriteLow(LED1_PORT,LED1_PIN);
+			Delay(1000);
+			GPIO_WriteLow(LED2_PORT,LED2_PIN);
+			Delay(1000);
+			GPIO_WriteLow(LED3_PORT,LED3_PIN);
+			Delay(1000);
+			break;		
 		}
 	}	
 }
