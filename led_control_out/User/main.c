@@ -58,8 +58,8 @@ uint8_t led_status = STEP1;
 
 void Led_Pwm_config()////////
 {
-	uint16_t led_bright_step1 = 0;
-	uint16_t led_bright_step2 = 0;
+	static uint16_t led_bright_step1 = 0;
+	static uint16_t led_bright_step2 = 0;
 	
 	uint8_t is_holding_button = 0;
 	static uint8_t holding_start = 0;
