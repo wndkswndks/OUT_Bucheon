@@ -35,7 +35,7 @@
 uint32_t TIM1COUNTER = 0;
 
 extern LED_T m_led;
-
+extern BUTTON_T m_button;
 /* Private function prototypes -----------------------------------------------*/
 
 /* Private functions ---------------------------------------------------------*/
@@ -479,16 +479,17 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */ 
-//  	if(WWDG_GetCounter()==0)
-//	{
-//		WWDG_SWReset();
-//	}
+  	if(WWDG_GetCounter()==0)
+	{
+		WWDG_SWReset();
+	}
 
 	if( (m_led.on_status == 1 ||m_led.on_status == 2 ) && m_led.eternul==0)
 	{
 		m_led.time_cnt++;
 		if(m_led.time_cnt > m_led.on_time)
 		{
+			m_button.step = STEP1;
 			m_led.time_cnt = 0;
 			m_led.operating = 1;
 			m_led.on_status = 4;		

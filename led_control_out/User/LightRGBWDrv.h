@@ -4,7 +4,7 @@
 #include "stm8s.h"
 
 
-void TIM1_Counter_Init();
+void GPIO_Config_Init();
 void TIM1RGBWCtrl(uint8_t RValue, uint8_t GValue, uint8_t BValue, uint8_t WValue);
 
 #endif

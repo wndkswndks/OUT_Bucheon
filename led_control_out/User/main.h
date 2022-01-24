@@ -11,11 +11,14 @@
 #define LED1_PORT  GPIOA	
 #define LED1_PIN   GPIO_PIN_3	
 
-#define LED2_PORT  GPIOB	
+#define LED2_PORT  GPIOC	
 #define LED2_PIN   GPIO_PIN_5
 
-#define LED3_PORT  GPIOB	
-#define LED3_PIN   GPIO_PIN_4
+#define LED3_PORT  GPIOC	
+#define LED3_PIN   GPIO_PIN_6
+
+#define OUT_PORT  GPIOC	
+#define OUT_PIN   GPIO_PIN_4
 
 
 
