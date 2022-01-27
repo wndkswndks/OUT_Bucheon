@@ -47,8 +47,10 @@ void main(void)
  // CLK_HSICmd(ENABLE);
   GPIO_Config_Init();//4PWM 
   TIM4_Config();
+  Delay(1000);
 
   m_button.step = STEP1;
+
 
   while (1)
   {
@@ -121,14 +123,14 @@ void shot_push_config()
 				m_led.on_status = 1;	
 				m_led.eternul = 0;
 				m_led.time_cnt = 0;
-				m_led.on_time = 3000;
+				m_led.on_time = 10*60000;
 				m_button.step = STEP2;
 		break;
 
 		case STEP2:
 				m_led.on_status = 2;
 				m_led.eternul = 0;
-				m_led.on_time = 6000;
+				m_led.on_time = 30*60000;
 				m_led.time_cnt = 0;
 				m_button.step = STEP3;
 		break;
