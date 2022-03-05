@@ -37,7 +37,7 @@ BUTTON_T m_button;
 
 extern uint32_t TIM1COUNTER;
 
-void main(void)
+void main(void)////
 {
 
   CLK_DeInit();
