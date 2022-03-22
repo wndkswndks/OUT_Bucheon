@@ -23,7 +23,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm8s_it.h"
-
+#include "main.h"
 /** @addtogroup Template_Project
   * @{
   */
@@ -37,7 +37,13 @@ uint8_t SwitchDelayFlag = 0;
 
 
 uint8_t RX_TX_BUFF =0;
+extern uint8_t time_15min_flag;
+extern uint32_t time_15min_cnt;
+extern uint8_t on_off_mode;
 
+#define TIME_15_MIN	900000
+
+#define TIME_1_MIN	60000
 /* Private function prototypes -----------------------------------------------*/
 
 /* Private functions ---------------------------------------------------------*/
@@ -489,6 +495,34 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
 //	}
    
    TIM1COUNTER++;
+
+   if(time_15min_flag)
+   {
+		time_15min_cnt++;
+
+		if(time_15min_cnt > TIME_1_MIN)
+		{
+			FAN_OFF;	
+		}
+		if(time_15min_cnt > TIME_15_MIN)
+		{
+			time_15min_cnt = 0;
+			time_15min_flag = RESET;
+			on_off_mode = OFF_MODE;
+
+			COLD_F1_OFF;
+			COLD_F2_OFF;
+			COLD_LED1_OFF;
+			COLD_LED2_OFF;
+			HOT_F1_OFF;
+			HOT_F2_OFF;
+			HOT_LED1_OFF;
+			HOT_LED2_OFF;
+
+			FAN_OFF;		
+		}
+		
+   }
   TIM4_ClearITPendingBit(TIM4_IT_UPDATE); 
  }
 #endif /*STM8S903*/

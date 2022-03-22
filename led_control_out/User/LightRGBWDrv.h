@@ -4,7 +4,7 @@
 #include "stm8s.h"
 
 
-void TIM1_Counter_Init();
+void GPIO_Config();
 void LED_Pwm_ctrl(uint8_t BValue, uint8_t WValue);
 
 #endif

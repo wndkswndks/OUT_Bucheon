@@ -13,16 +13,36 @@
 
 
 /*  			define start  			*/
-#define LIGHT_DEGREE 15
-#define WINDOW_VALUE        97
-#define COUNTER_INIT       104
-
-#define LAST_LED_BRIGHT_STEP	16
-#define FIRST_LED_BRIGHT_STEP	1
 
 #define BUTTON_PORT	GPIOD
-#define BUTTON_PIN	GPIO_PIN_2
+#define BUTTON_PIN	GPIO_PIN_3
 
+#define COLD_F1_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_1);
+#define COLD_F1_OFF	GPIO_WriteLow(GPIOA,GPIO_PIN_1);
+
+#define COLD_F2_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_2);
+#define COLD_F2_OFF	GPIO_WriteLow(GPIOA,GPIO_PIN_2);
+
+#define HOT_F1_ON	GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
+#define HOT_F1_OFF	GPIO_WriteLow(GPIOC,GPIO_PIN_4);
+
+#define HOT_F2_ON	GPIO_WriteHigh(GPIOC,GPIO_PIN_3);
+#define HOT_F2_OFF	GPIO_WriteLow(GPIOC,GPIO_PIN_3);
+
+#define HOT_LED1_ON	GPIO_WriteLow(GPIOC,GPIO_PIN_7);
+#define HOT_LED1_OFF GPIO_WriteHigh(GPIOC,GPIO_PIN_7);	
+
+#define HOT_LED2_ON	GPIO_WriteLow(GPIOD,GPIO_PIN_4);
+#define HOT_LED2_OFF GPIO_WriteHigh(GPIOD,GPIO_PIN_4);
+
+#define COLD_LED1_ON   GPIO_WriteLow(GPIOC,GPIO_PIN_5);
+#define COLD_LED1_OFF  GPIO_WriteHigh(GPIOC,GPIO_PIN_5);	
+
+#define COLD_LED2_ON   GPIO_WriteLow(GPIOD,GPIO_PIN_6);
+#define COLD_LED2_OFF  GPIO_WriteHigh(GPIOD,GPIO_PIN_6);
+
+#define FAN_ON  	GPIO_WriteHigh(GPIOA,GPIO_PIN_3);
+#define FAN_OFF 	GPIO_WriteLow(GPIOA,GPIO_PIN_3);
 
 /*  			define end  			*/
 
@@ -44,9 +64,16 @@ typedef enum
 } STEP_E;
 typedef enum
 {
-	CCR1_LED,
-	CCR2_LED,
-} CCR_E;
+	HOT_MODE,
+	COLD_MODE,
+} TEMP_MODE_E;
+
+typedef enum
+{
+	OFF_MODE,
+	ON_MODE,
+} ON_OFF_MODE_E;
+
 
 /*  			enum end  				*/
 
@@ -62,7 +89,7 @@ typedef enum
 void Led_Pwm_config();
 void short_holding_config();
 void long_holding_config();
-void Add_Led_bright(uint8_t ccr_led, uint16_t add_value);
+
 uint32_t HAL_GetTick();
 void TIM4_Config(void);
 uint32_t Time_taken(uint32_t nowtime,uint32_t prevtime);

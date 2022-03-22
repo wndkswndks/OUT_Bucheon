@@ -37,13 +37,13 @@ void main(void)//////////ttt///eee////lllllqwer
   /* Initialization of the clock ;Clock divider to HSI/1 */
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
 
-  TIM1_Counter_Init();//4PWM 
+  GPIO_Config();//4PWM 
   TIM4_Config();
-  LED_Pwm_ctrl(0,0);//50% PWM  test
+  //LED_Pwm_ctrl(0,0);//50% PWM  test
   while (1)
   {
     Led_Pwm_config();//
-    Low_power_Config();
+    //Low_power_Config();
 
 	//WWDG_SetCounter(125);
 
@@ -54,13 +54,14 @@ void main(void)//////////ttt///eee////lllllqwer
 
 
 uint8_t led_status = STEP1;
+TEMP_MODE_E temp_mode = HOT_MODE;
+uint8_t on_off_mode = OFF_MODE;
 
+uint8_t time_15min_flag = RESET;
+uint32_t time_15min_cnt = 0;
 
 void Led_Pwm_config()////////
-{
-	static uint16_t led_bright_step1 = 0;
-	static uint16_t led_bright_step2 = 0;
-	
+{	
 	uint8_t is_holding_button = 0;
 	static uint8_t holding_start = 0;
 
@@ -70,14 +71,18 @@ void Led_Pwm_config()////////
 	uint32_t now_time_ms = 0;
 	static uint32_t prv_time_ms = 0;
 	static uint32_t continuity_push_prevention_ms = 0;
-	uint16_t long_define_time_ms = 500;
+	uint16_t long_define_time_ms = 1000;
 
 
-	led_bright_step1 = TIM1_GetCapture3()/LIGHT_DEGREE;
-	led_bright_step2 = TIM1_GetCapture4()/LIGHT_DEGREE;
 
-	if(!GPIO_ReadInputPin(BUTTON_PORT, BUTTON_PIN)) is_holding_button = SET; 
-	else is_holding_button = 0;
+	if(!GPIO_ReadInputPin(BUTTON_PORT, BUTTON_PIN)) 
+	{
+		is_holding_button = SET; 
+	}
+	else 
+	{
+		is_holding_button = 0;
+	}
 //================================	
 	if(is_holding_button && !holding_start)
 	{
@@ -87,10 +92,6 @@ void Led_Pwm_config()////////
 	}
 	else if(is_holding_button && holding_start)
 	{
-		if(led_bright_step1 ==LAST_LED_BRIGHT_STEP ||led_bright_step2 ==LAST_LED_BRIGHT_STEP ) 
-			long_define_time_ms = 3000;
-		else 
-			long_define_time_ms = 500;
 
 		now_time_ms = HAL_GetTick();
 		if(Time_taken(now_time_ms,prv_time_ms) > long_define_time_ms)
@@ -129,101 +130,90 @@ void Led_Pwm_config()////////
 
 void short_holding_config()
 {
-	static uint8_t oneflag = 0;
-	static uint8_t step = STEP1;
-	static uint16_t memory_ccr1 = 0;
-
-	switch(step)
+	TEMP_MODE_E next_mode ;
+	if(on_off_mode == OFF_MODE)return;
+	
+	if(temp_mode == HOT_MODE)
 	{
-		case STEP1:
-			if(led_status == STEP1)
-			{
-				if(oneflag==0) TIM1_SetCompare3(LIGHT_DEGREE*8);
-				else TIM1_SetCompare3(memory_ccr1);
-				
-				step = STEP2;
-			}
-		break;
+		COLD_F1_OFF;
+		COLD_F2_OFF;
+		COLD_LED1_OFF;
+		COLD_LED2_OFF;
 
-		case STEP2:
-			if(led_status == STEP1)
-			{
-				TIM1_SetCompare3(0);
-				TIM1_SetCompare4(LIGHT_DEGREE*8);
-				led_status = STEP2;
-				step = STEP3;
-			}
-		break;
+		HOT_F1_ON;
+		HOT_F2_ON;
+		HOT_LED1_ON;
+		HOT_LED2_ON;
 
-		case STEP3:
-			if(led_status == STEP2)
-			{
-				TIM1_SetCompare3(LIGHT_DEGREE*10);
-				TIM1_SetCompare4(LIGHT_DEGREE*10);
-				led_status = STEP3;
-				step = STEP4;
-			}
-		break;
+		next_mode = COLD_MODE;
+		temp_mode = next_mode;
+	}
+	else if(temp_mode == COLD_MODE)
+	{
+		HOT_F1_OFF;
+		HOT_F2_OFF;
+		HOT_LED1_OFF;
+		HOT_LED2_OFF;
 
-		case STEP4:
-			if(led_status == STEP3)
-			{
-				memory_ccr1 = TIM1_GetCapture3();
-				TIM1_SetCompare3(0);
-				TIM1_SetCompare4(0);
-				led_status = STEP1;
-				oneflag = 1;
-				step = STEP1;
-			}
-		break;
+		COLD_F1_ON;
+		COLD_F2_ON;
+		COLD_LED1_ON;
+		COLD_LED2_ON;
 
+		next_mode = HOT_MODE;
+		temp_mode = next_mode;
 	}
 
+	time_15min_cnt = 0;
+	time_15min_flag = SET;
 
 }
 
 void long_holding_config()
 {
-	switch(led_status)
-	{
-		case STEP1:
-			Add_Led_bright(CCR1_LED, LIGHT_DEGREE);			
-		break;
-
-		case STEP2:
-			Add_Led_bright(CCR2_LED, LIGHT_DEGREE);
-		break;
-		
-		case STEP3:
-			Add_Led_bright(CCR1_LED, LIGHT_DEGREE);
-			Add_Led_bright(CCR2_LED, LIGHT_DEGREE);
-		break;
-	}
-}
-void Add_Led_bright(uint8_t ccr_led, uint16_t add_value)
-{
-	uint16_t data = 0;
+	TEMP_MODE_E next_mode ;
 	
-	switch(ccr_led)
+	if(on_off_mode == ON_MODE)
 	{
-		case CCR1_LED:
-		data = TIM1_GetCapture3();
-		data += add_value;
-		if(data>LIGHT_DEGREE*LAST_LED_BRIGHT_STEP) 
-			TIM1_SetCompare3(LIGHT_DEGREE*FIRST_LED_BRIGHT_STEP); 
-		else 
-			TIM1_SetCompare3(data);
-		break;
+		on_off_mode = OFF_MODE;
+		
+		COLD_F1_OFF;
+		COLD_F2_OFF;
+		COLD_LED1_OFF;
+		COLD_LED2_OFF;
+		HOT_F1_OFF;
+		HOT_F2_OFF;
+		HOT_LED1_OFF;
+		HOT_LED2_OFF;
 
-		case CCR2_LED:
-		data = TIM1_GetCapture4();
-		data += add_value;
-		if(data>LIGHT_DEGREE*LAST_LED_BRIGHT_STEP) 
-			TIM1_SetCompare4(LIGHT_DEGREE*FIRST_LED_BRIGHT_STEP);
-		else 
-			TIM1_SetCompare4(data);
-		break;
+		FAN_OFF;		
+
+		time_15min_cnt = 0;
+		time_15min_flag = RESET;
 	}
+
+	else if(on_off_mode == OFF_MODE)
+	{
+		on_off_mode = ON_MODE;
+
+		COLD_F1_OFF;
+		COLD_F2_OFF;
+		COLD_LED1_OFF;
+		COLD_LED2_OFF;
+
+		HOT_F1_ON;
+		HOT_F2_ON;
+		HOT_LED1_ON;
+		HOT_LED2_ON;
+
+		FAN_ON;
+		next_mode = COLD_MODE;
+		temp_mode = next_mode;
+
+		time_15min_cnt = 0;
+		time_15min_flag = SET;
+	}
+
 }
 
 void Low_power_Config()
