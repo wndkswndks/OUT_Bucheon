@@ -39,6 +39,7 @@ void main(void)//////////ttt///eee////lllllqwer
 
   GPIO_Config();//4PWM 
   TIM4_Config();
+  ADC_Config();
   //LED_Pwm_ctrl(0,0);//50% PWM  test
   while (1)
   {
@@ -278,6 +279,74 @@ void Delay(uint32_t cnt)
     {
     }
   }
+}
+void ADC_Config(void)
+{
+  /*  Init GPIO for ADC2 */
+  GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_FL_NO_IT);
+  
+  /* De-Init ADC peripheral*/
+  ADC1_DeInit();
+
+  /* Init ADC2 peripheral */
+  ADC1_Init(ADC1_CONVERSIONMODE_CONTINUOUS, ADC1_CHANNEL_3, ADC1_PRESSEL_FCPU_D2, 
+            ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_RIGHT, ADC1_SCHMITTTRIG_CHANNEL6,
+            DISABLE);
+
+  /* Enable EOC interrupt */
+  //ADC1_ITConfig(ADC1_IT_AWS6, ENABLE);
+  ADC1_ITConfig(ADC1_IT_EOCIE, DISABLE);
+  
+  ADC1_Cmd(ENABLE);
+
+  /* Enable general interrupts */  
+  //enableInterrupts();
+  
+  /*Start Conversion */
+  ADC1_StartConversion();
+}
+float Check_Temp(void)
+{ 
+ uint16_t sum = 0;
+ uint8_t ADC_NUM = 10;
+ float Avg_Conversion_Value = 0.0;    
+ sum = 0;
+ for(uint8_t i = 0; i<ADC_NUM; i++)
+ {
+   sum += ADC1_GetConversionValue();
+   Delay_ms(1);
+ } 
+ 
+ Avg_Conversion_Value = (float)sum / ADC_NUM;
+
+ float Vin = (Avg_Conversion_Value / 1024.0) * 5.0;
+ 
+ float R1 = Vin/(5.0 - Vin) * 10000.0; 
+ 
+ float temp = 0.0;
+ float a = 0;
+ float b = 0;
+ 
+ if(R1 > 26250.0)
+ {
+   a = -20.0;
+   b = 208.47;
+ }
+ else if(R1 > 4025.0)
+ {
+   a = -26.6;
+   b = 270.54;
+ }
+ else
+ {
+   a = -36.18;
+   b = 349.45;
+ }
+ 
+ temp = a*log(R1) + b;
+ 
+ return temp;
+ 
 }
 
 #ifdef USE_FULL_ASSERT

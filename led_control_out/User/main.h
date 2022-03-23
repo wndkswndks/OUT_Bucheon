@@ -95,6 +95,8 @@ void TIM4_Config(void);
 uint32_t Time_taken(uint32_t nowtime,uint32_t prevtime);
 void Low_power_Config();
 void Delay(uint32_t cnt);
+void ADC_Config(void);
+float Check_Temp(void);
 
 /*  			function end  			*/
 
