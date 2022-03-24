@@ -44,6 +44,7 @@ void main(void)//////////ttt///eee////lllllqwer
   while (1)
   {
     Led_Pwm_config();//
+    Check_Temp();
     //Low_power_Config();
 
 	//WWDG_SetCounter(125);
@@ -305,47 +306,99 @@ void ADC_Config(void)
   /*Start Conversion */
   ADC1_StartConversion();
 }
+
+//-20 -21.78, 
+//-19 -20.59, 
+//-18 -19.41, 
+//-17 -18.24, 
+//-16 -17.08, 
+//-15 -15.93, 
+//-14 -14.78, 
+//-13 -13.64, 
+//-12 -12.50, 
+//-11 -11.38, 
+//-10 -10.26, 
+//-9 -9.15, 
+//-8 -8.04, 
+//-7 -6.94, 
+//-6 -5.85, 
+//-5 -4.76, 
+//-4 -3.68, 
+//-3 -2.61, 
+//-2 -1.54, 
+//-1 -0.48, 
+//0 0.60, 
+//1 1.63, 
+//2 2.68, 
+//3 3.72, 
+//4 4.75, 
+//5 5.78, 
+//6 6.81, 
+//7 7.83, 
+//8 8.84, 
+//9 9.85, 
+//10 10.85, 
+//11 11.85, 
+//12 12.85, 
+//13 13.84, 
+//14 14.83, 
+//15 15.81, 
+//16 16.78, 
+//17 17.75, 
+//18 18.72, 
+//19 19.68, 
+//20 20.64, 
+//21 21.59, 
+//22 22.54, 
+//23 23.49, 
+//24 24.42, 
+//25 25.38, 
+//26 26.29, 
+//27 27.21, 
+//28 28.13, 
+//29 29.05, 
+//30 29.96, 
+//31 30.87, 
+//32 31.77, 
+//33 32.67, 
+//34 33.57, 
+//35 34.45, 
+//36 35.34, 
+//37 36.22, 
+//38 37.09, 
+//39 37.96, 
+//40 38.83, 
+
 float Check_Temp(void)
 { 
- uint16_t sum = 0;
- uint8_t ADC_NUM = 10;
- float Avg_Conversion_Value = 0.0;    
- sum = 0;
- for(uint8_t i = 0; i<ADC_NUM; i++)
- {
-   sum += ADC1_GetConversionValue();
-   Delay_ms(1);
- } 
- 
- Avg_Conversion_Value = (float)sum / ADC_NUM;
+	 uint16_t sum = 0;
+	 uint8_t ADC_NUM = 10;
+	 float Avg_Conversion_Value = 0.0;    
+	 sum = 0;
+	 for(uint8_t i = 0; i<ADC_NUM; i++)
+	 {
+	   sum += ADC1_GetConversionValue();
+	   Delay_ms(1);
+	 } 
+	 
+	 Avg_Conversion_Value = (float)sum / ADC_NUM;
 
- float Vin = (Avg_Conversion_Value / 1024.0) * 5.0;
- 
- float R1 = Vin/(5.0 - Vin) * 10000.0; 
- 
- float temp = 0.0;
- float a = 0;
- float b = 0;
- 
- if(R1 > 26250.0)
- {
-   a = -20.0;
-   b = 208.47;
- }
- else if(R1 > 4025.0)
- {
-   a = -26.6;
-   b = 270.54;
- }
- else
- {
-   a = -36.18;
-   b = 349.45;
- }
- 
- temp = a*log(R1) + b;
- 
- return temp;
+	 float Vin = (Avg_Conversion_Value / 1024.0) * 3.0;
+	 
+	 float R1 = Vin/(3.0 - Vin) * 10000.0; 
+	 
+	 float temp = 0.0;
+	 // 온도계 데이터 시트 : MF52B 103F3950-100.zh-CN
+	 // 엑셀로 저항값들을 나열한뒤 근사치 식을 구했다.
+	 // 원래식  Y = 32.958 * 2.71828^-0.047X
+	 // 원래식을 x에 관한 식으로 변경
+
+	 
+	 temp = log(32.958/R1)/0.047;
+	 
+
+	 
+	 return temp;
  
 }
 

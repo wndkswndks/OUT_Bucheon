@@ -14,6 +14,11 @@
 
 /*  			define start  			*/
 
+#define RESET_TEMP	35
+#define STOP_TEMP	40
+
+
+
 #define BUTTON_PORT	GPIOD
 #define BUTTON_PIN	GPIO_PIN_3
 
