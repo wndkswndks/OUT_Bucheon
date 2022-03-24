@@ -33,10 +33,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 uint32_t TIM1COUNTER = 0;
-uint8_t SwitchDelayFlag = 0;
 
-
-uint8_t RX_TX_BUFF =0;
 extern uint8_t time_15min_flag;
 extern uint32_t time_15min_cnt;
 extern uint8_t on_off_mode;
@@ -489,10 +486,10 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */ 
-//  	if(WWDG_GetCounter()==0)
-//	{
-//		WWDG_SWReset();
-//	}
+  	if(WWDG_GetCounter()==0)
+	{
+		WWDG_SWReset();
+	}
    
    TIM1COUNTER++;
 
@@ -506,20 +503,10 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
 		}
 		if(time_15min_cnt > TIME_15_MIN)
 		{
-			time_15min_cnt = 0;
-			time_15min_flag = RESET;
+			
 			on_off_mode = OFF_MODE;
 
-			COLD_F1_OFF;
-			COLD_F2_OFF;
-			COLD_LED1_OFF;
-			COLD_LED2_OFF;
-			HOT_F1_OFF;
-			HOT_F2_OFF;
-			HOT_LED1_OFF;
-			HOT_LED2_OFF;
-
-			FAN_OFF;		
+			All_off();		
 		}
 		
    }

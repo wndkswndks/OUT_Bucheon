@@ -22,6 +22,12 @@
 #define BUTTON_PORT	GPIOD
 #define BUTTON_PIN	GPIO_PIN_3
 
+
+#define IS_COLD_ON	GPIO_ReadInputPin(GPIOA, GPIO_PIN_1); 
+#define IS_HOT_ON	GPIO_ReadInputPin(GPIOC, GPIO_PIN_4); 
+
+
+
 #define COLD_F1_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_1);
 #define COLD_F1_OFF	GPIO_WriteLow(GPIOA,GPIO_PIN_1);
 
@@ -102,6 +108,11 @@ void Low_power_Config();
 void Delay(uint32_t cnt);
 void ADC_Config(void);
 float Check_Temp(void);
+void Temp_config();
+void Hot_ON();
+void Cold_ON();
+void All_off();
+
 
 /*  			function end  			*/
 

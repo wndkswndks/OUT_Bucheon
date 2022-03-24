@@ -44,10 +44,10 @@ void main(void)//////////ttt///eee////lllllqwer
   while (1)
   {
     Led_Pwm_config();//
-    Check_Temp();
-    //Low_power_Config();
+    Temp_config();
+    Low_power_Config();
 
-	//WWDG_SetCounter(125);
+	WWDG_SetCounter(125);
 
 
   }
@@ -130,6 +130,48 @@ void Led_Pwm_config()////////
 
 }
 
+void Cold_ON()
+{
+	HOT_F1_OFF;
+	HOT_F2_OFF;
+	HOT_LED1_OFF;
+	HOT_LED2_OFF;
+	
+	COLD_F1_ON;
+	COLD_F2_ON;
+	COLD_LED1_ON;
+	COLD_LED2_ON;
+
+}
+void Hot_ON()
+{
+	COLD_F1_OFF;
+	COLD_F2_OFF;
+	COLD_LED1_OFF;
+	COLD_LED2_OFF;
+	
+	HOT_F1_ON;
+	HOT_F2_ON;
+	HOT_LED1_ON;
+	HOT_LED2_ON;
+}
+
+void All_off()
+{
+	COLD_F1_OFF;
+	COLD_F2_OFF;
+	COLD_LED1_OFF;
+	COLD_LED2_OFF;
+	HOT_F1_OFF;
+	HOT_F2_OFF;
+	HOT_LED1_OFF;
+	HOT_LED2_OFF;
+
+	FAN_OFF;
+
+	time_15min_cnt = 0;
+	time_15min_flag = RESET;
+}
 void short_holding_config()
 {
 	TEMP_MODE_E next_mode ;
@@ -137,30 +179,14 @@ void short_holding_config()
 	
 	if(temp_mode == HOT_MODE)
 	{
-		COLD_F1_OFF;
-		COLD_F2_OFF;
-		COLD_LED1_OFF;
-		COLD_LED2_OFF;
-
-		HOT_F1_ON;
-		HOT_F2_ON;
-		HOT_LED1_ON;
-		HOT_LED2_ON;
+		Hot_ON();
 
 		next_mode = COLD_MODE;
 		temp_mode = next_mode;
 	}
 	else if(temp_mode == COLD_MODE)
 	{
-		HOT_F1_OFF;
-		HOT_F2_OFF;
-		HOT_LED1_OFF;
-		HOT_LED2_OFF;
-
-		COLD_F1_ON;
-		COLD_F2_ON;
-		COLD_LED1_ON;
-		COLD_LED2_ON;
+		Cold_ON();
 
 		next_mode = HOT_MODE;
 		temp_mode = next_mode;
@@ -171,6 +197,7 @@ void short_holding_config()
 
 }
 
+
 void long_holding_config()
 {
 	TEMP_MODE_E next_mode ;
@@ -179,34 +206,14 @@ void long_holding_config()
 	{
 		on_off_mode = OFF_MODE;
 		
-		COLD_F1_OFF;
-		COLD_F2_OFF;
-		COLD_LED1_OFF;
-		COLD_LED2_OFF;
-		HOT_F1_OFF;
-		HOT_F2_OFF;
-		HOT_LED1_OFF;
-		HOT_LED2_OFF;
-
-		FAN_OFF;		
-
-		time_15min_cnt = 0;
-		time_15min_flag = RESET;
+		All_off();	
 	}
 
 	else if(on_off_mode == OFF_MODE)
 	{
 		on_off_mode = ON_MODE;
 
-		COLD_F1_OFF;
-		COLD_F2_OFF;
-		COLD_LED1_OFF;
-		COLD_LED2_OFF;
-
-		HOT_F1_ON;
-		HOT_F2_ON;
-		HOT_LED1_ON;
-		HOT_LED2_ON;
+		Hot_ON();
 
 		FAN_ON;
 		next_mode = COLD_MODE;
@@ -221,7 +228,7 @@ void long_holding_config()
 void Low_power_Config()
 {
 	static uint32_t last_on_time_ms = 0;
-	if(TIM1_GetCapture3() == 0 && TIM1_GetCapture4() == 0)
+	if(IS_HOT_ON ==RESET && IS_COLD_ON ==RESET)
     {
 		if(Time_taken(HAL_GetTick(),last_on_time_ms)>60000) 
 		{
@@ -368,37 +375,77 @@ void ADC_Config(void)
 //38 37.09, 
 //39 37.96, 
 //40 38.83, 
+uint32_t GetTick()
+{
+	return TIM1COUNTER;
+}
+
+
+void Temp_config()
+{
+	float temperature = 0;
+	temperature = Check_Temp();
+
+	if(temperature >=STOP_TEMP)
+	{
+		All_off();
+		on_off_mode = OFF_MODE;
+	}
+}
 
 float Check_Temp(void)
 { 
 	 uint16_t sum = 0;
 	 uint8_t ADC_NUM = 10;
-	 float Avg_Conversion_Value = 0.0;    
+	 float Avg_Conversion_Value = 0.0;
+	 static uint8_t getAdc_cnt = 0;
+	 static uint32_t past_time = 0;
+	 static uint8_t step = STEP1;
 	 sum = 0;
-	 for(uint8_t i = 0; i<ADC_NUM; i++)
+
+	 switch()
 	 {
-	   sum += ADC1_GetConversionValue();
-	   Delay_ms(1);
-	 } 
-	 
-	 Avg_Conversion_Value = (float)sum / ADC_NUM;
+		case STEP1:
+			if(HAL_GetTick() >= past_time + 10 )
+			{
+				sum += ADC1_GetConversionValue();
+				past_time = HAL_GetTick();
+				getAdc_cnt++;
+				if(getAdc_cnt ==10) 
+				{
+					getAdc_cnt = 0;
+					step = STEP2;
+				}
+			}
 
-	 float Vin = (Avg_Conversion_Value / 1024.0) * 3.0;
+		break;
+
+		case STEP2:
+			Avg_Conversion_Value = (float)sum / ADC_NUM;
+			
+			float Vin = (Avg_Conversion_Value / 1024.0) * 3.0;
+			
+			float temperature_R = Vin/(3.0 - Vin) * 10000.0; //3V, 10K옴 저항분배
+			
+			float temp = 0.0;
+			// 온도계 데이터 시트 : MF52B 103F3950-100.zh-CN
+			// 엑셀로 저항값들을 나열한뒤 근사치 식을 구했다.
+			// 원래식  Y = 32.958 * 2.71828^-0.047X
+			// 원래식을 x에 관한 식으로 변경
+			
+			
+			temp = log(32.958/temperature_R)/0.047;
+
+			step = STEP1;
+
+			return temp;
+
+		break;
+	 }
 	 
-	 float R1 = Vin/(3.0 - Vin) * 10000.0; 
 	 
-	 float temp = 0.0;
-	 // 온도계 데이터 시트 : MF52B 103F3950-100.zh-CN
-	 // 엑셀로 저항값들을 나열한뒤 근사치 식을 구했다.
-	 // 원래식  Y = 32.958 * 2.71828^-0.047X
-	 // 원래식을 x에 관한 식으로 변경
 
 	 
-	 temp = log(32.958/R1)/0.047;
-	 
-
-	 
-	 return temp;
  
 }
 
