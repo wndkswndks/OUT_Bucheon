@@ -24,6 +24,7 @@
 #include "stm8s.h"
 #include "main.h"
 #include "LightRGBWDrv.h"
+#include<math.h>
 /* Private defines -----------------------------------------------------------*/
 
 
@@ -40,14 +41,15 @@ void main(void)//////////ttt///eee////lllllqwer
   GPIO_Config();//4PWM 
   TIM4_Config();
   ADC_Config();
-  //LED_Pwm_ctrl(0,0);//50% PWM  test
+
+  //halt();
   while (1)
   {
     Led_Pwm_config();//
     Temp_config();
     Low_power_Config();
 
-	WWDG_SetCounter(125);
+	//WWDG_SetCounter(125);
 
 
   }
@@ -314,6 +316,8 @@ void ADC_Config(void)
   ADC1_StartConversion();
 }
 
+
+// -21.78 k옴 
 //-20 -21.78, 
 //-19 -20.59, 
 //-18 -19.41, 
@@ -380,11 +384,14 @@ uint32_t GetTick()
 	return TIM1COUNTER;
 }
 
+float temperature = 0;
 
 void Temp_config()
 {
-	float temperature = 0;
-	temperature = Check_Temp();
+	float tmp = 0;
+	tmp = Check_Temp();
+
+	if(tmp !=0)temperature = tmp;
 
 	if(temperature >=STOP_TEMP)
 	{
@@ -395,15 +402,17 @@ void Temp_config()
 
 float Check_Temp(void)
 { 
-	 uint16_t sum = 0;
+	 static uint16_t sum = 0;
 	 uint8_t ADC_NUM = 10;
 	 float Avg_Conversion_Value = 0.0;
 	 static uint8_t getAdc_cnt = 0;
 	 static uint32_t past_time = 0;
 	 static uint8_t step = STEP1;
-	 sum = 0;
+	 float Vin = 0;
+	 float temperature_R = 0;
+	 float temp = 0;
 
-	 switch()
+	 switch(step)
 	 {
 		case STEP1:
 			if(HAL_GetTick() >= past_time + 10 )
@@ -422,19 +431,19 @@ float Check_Temp(void)
 
 		case STEP2:
 			Avg_Conversion_Value = (float)sum / ADC_NUM;
+			sum = 0;
+			Vin = (Avg_Conversion_Value / 1024.0) * 3.0;
 			
-			float Vin = (Avg_Conversion_Value / 1024.0) * 3.0;
+			temperature_R = Vin/(3.0 - Vin) * 10000.0; //3V, 10K옴 저항분배
 			
-			float temperature_R = Vin/(3.0 - Vin) * 10000.0; //3V, 10K옴 저항분배
-			
-			float temp = 0.0;
+			temp = 0.0;
 			// 온도계 데이터 시트 : MF52B 103F3950-100.zh-CN
 			// 엑셀로 저항값들을 나열한뒤 근사치 식을 구했다.
-			// 원래식  Y = 32.958 * 2.71828^-0.047X
+			// 원래식  Y = 32958 * 2.71828^-0.047X
 			// 원래식을 x에 관한 식으로 변경
 			
 			
-			temp = log(32.958/temperature_R)/0.047;
+			temp = log(32958/temperature_R)/0.047;
 
 			step = STEP1;
 
@@ -445,7 +454,7 @@ float Check_Temp(void)
 	 
 	 
 
-	 
+	 return 0;
  
 }
 

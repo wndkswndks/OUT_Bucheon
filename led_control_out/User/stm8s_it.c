@@ -486,10 +486,10 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */ 
-  	if(WWDG_GetCounter()==0)
-	{
-		WWDG_SWReset();
-	}
+//  	if(WWDG_GetCounter()==0)
+//	{
+//		WWDG_SWReset();
+//	}
    
    TIM1COUNTER++;
 

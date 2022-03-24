@@ -23,8 +23,8 @@
 #define BUTTON_PIN	GPIO_PIN_3
 
 
-#define IS_COLD_ON	GPIO_ReadInputPin(GPIOA, GPIO_PIN_1); 
-#define IS_HOT_ON	GPIO_ReadInputPin(GPIOC, GPIO_PIN_4); 
+#define IS_COLD_ON	GPIO_ReadInputPin(GPIOA, GPIO_PIN_1)
+#define IS_HOT_ON	GPIO_ReadInputPin(GPIOC, GPIO_PIN_4)
 
 
 
