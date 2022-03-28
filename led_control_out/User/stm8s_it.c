@@ -497,7 +497,7 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
    {
 		time_15min_cnt++;
 
-		if(time_15min_cnt > TIME_1_MIN)
+		if(time_15min_cnt > TIME_1_MIN &&time_15min_cnt < TIME_1_MIN+3 )
 		{
 			FAN_OFF;	
 		}
