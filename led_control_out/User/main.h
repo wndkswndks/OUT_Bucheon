@@ -111,7 +111,8 @@ float Check_Temp(void);
 void Temp_config();
 void Hot_ON();
 void Cold_ON();
-void All_off();
+void All_off(uint8_t fan_on_flag);
+
 
 
 /*  			function end  			*/

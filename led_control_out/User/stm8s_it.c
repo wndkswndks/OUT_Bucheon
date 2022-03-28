@@ -38,6 +38,9 @@ extern uint8_t time_15min_flag;
 extern uint32_t time_15min_cnt;
 extern uint8_t on_off_mode;
 
+extern uint8_t time_1min_flag;
+extern uint32_t time_1min_cnt;
+
 #define TIME_15_MIN	900000
 
 #define TIME_1_MIN	60000
@@ -493,22 +496,31 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
    
    TIM1COUNTER++;
 
+
+
    if(time_15min_flag)
    {
 		time_15min_cnt++;
 
-		if(time_15min_cnt > TIME_1_MIN &&time_15min_cnt < TIME_1_MIN+3 )
-		{
-			FAN_OFF;	
-		}
 		if(time_15min_cnt > TIME_15_MIN)
 		{
 			
 			on_off_mode = OFF_MODE;
 
-			All_off();		
+			All_off(RESET);		
 		}
-		
+   }
+
+   if(time_1min_flag)
+   {
+		time_1min_cnt++;
+
+		if(time_1min_cnt > TIME_1_MIN)
+		{
+			time_1min_cnt = 0;
+			time_1min_flag = RESET;
+			FAN_OFF;
+		}
    }
   TIM4_ClearITPendingBit(TIM4_IT_UPDATE); 
  }
