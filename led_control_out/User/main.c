@@ -201,6 +201,9 @@ void short_holding_config()
 
 	time_15min_cnt = 0;
 	time_15min_flag = SET;
+	
+	time_1min_flag = RESET;
+	time_1min_cnt = 0;
 
 }
 
@@ -232,6 +235,9 @@ void long_holding_config()
 
 		time_15min_cnt = 0;
 		time_15min_flag = SET;
+
+		time_1min_flag = RESET;
+		time_1min_cnt = 0;
 	}
 
 }
