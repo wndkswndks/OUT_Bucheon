@@ -66,6 +66,7 @@ uint32_t time_15min_cnt = 0;
 
 uint8_t time_1min_flag = RESET;
 uint32_t time_1min_cnt = 0;
+uint8_t temp_over = 0;
 
 
 void Led_Pwm_config()////////
@@ -138,6 +139,13 @@ void Led_Pwm_config()////////
 
 void Cold_ON()
 {
+	temp_mode = COLD_MODE;	
+	time_1min_flag = RESET;
+	time_1min_cnt = 0;
+
+	time_15min_cnt = 0;
+	time_15min_flag = SET;
+	
 	HOT_F1_OFF;
 	HOT_F2_OFF;
 	HOT_LED1_OFF;
@@ -151,6 +159,13 @@ void Cold_ON()
 }
 void Hot_ON()
 {
+	temp_mode = HOT_MODE;
+	time_1min_flag = RESET;
+	time_1min_cnt = 0;
+
+	time_15min_cnt = 0;
+	time_15min_flag = SET;
+	
 	COLD_F1_OFF;
 	COLD_F2_OFF;
 	COLD_LED1_OFF;
@@ -181,37 +196,23 @@ void All_off(uint8_t fan_on_flag)
 }
 void short_holding_config()
 {
-	TEMP_MODE_E next_mode ;
+
 	if(on_off_mode == OFF_MODE)return;
 	
-	if(temp_mode == HOT_MODE)
+	if(temp_mode == COLD_MODE)
 	{
 		Hot_ON();
-
-		next_mode = COLD_MODE;
-		temp_mode = next_mode;
 	}
-	else if(temp_mode == COLD_MODE)
-	{
+	else if(temp_mode == HOT_MODE)
+	{	
 		Cold_ON();
-
-		next_mode = HOT_MODE;
-		temp_mode = next_mode;
 	}
-
-	time_15min_cnt = 0;
-	time_15min_flag = SET;
 	
-	time_1min_flag = RESET;
-	time_1min_cnt = 0;
-
 }
 
 
 void long_holding_config()
-{
-	TEMP_MODE_E next_mode ;
-	
+{	
 	if(on_off_mode == ON_MODE)
 	{
 		on_off_mode = OFF_MODE;
@@ -230,14 +231,8 @@ void long_holding_config()
 		Hot_ON();
 
 		FAN_ON;
-		next_mode = COLD_MODE;
-		temp_mode = next_mode;
 
-		time_15min_cnt = 0;
-		time_15min_flag = SET;
-
-		time_1min_flag = RESET;
-		time_1min_cnt = 0;
+		temp_over = RESET;
 	}
 
 }
@@ -404,14 +399,34 @@ float temperature = 0;
 void Temp_config()
 {
 	float tmp = 0;
+	
 	tmp = Check_Temp();
 
 	if(tmp !=0)temperature = tmp;
 
 	if(temperature >=STOP_TEMP)
 	{
-		All_off(RESET);
+		temp_over = SET;
 		on_off_mode = OFF_MODE;
+		
+		All_off(RESET);
+		
+	}
+
+	if(temp_over==SET && temperature <= RESET_TEMP)
+	{
+		temp_over = RESET;
+		on_off_mode = ON_MODE;
+
+		Hot_ON();
+
+		FAN_ON;
+		
+
+		time_15min_cnt = 0;
+		time_15min_flag = SET;
+
+
 	}
 }
 
