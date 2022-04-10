@@ -22,6 +22,7 @@
 #define BUTTON_PORT	GPIOD
 #define BUTTON_PIN	GPIO_PIN_3
 
+#define IS_BUTTON_PUSH	(GPIO_ReadInputPin(BUTTON_PORT, GPIO_PIN_3) == 0)
 
 #define IS_COLD_ON	GPIO_ReadInputPin(GPIOA, GPIO_PIN_1)
 #define IS_HOT_ON	GPIO_ReadInputPin(GPIOC, GPIO_PIN_4)

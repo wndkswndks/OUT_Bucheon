@@ -137,6 +137,46 @@ void Led_Pwm_config()////////
 
 }
 
+void Button_config()
+{
+	static uint8_t step = STEP1; 
+	static uint32_t push_time, relese_time = 0;
+	uint32_t push_term;
+
+	switch(step)
+	{
+		case STEP1:
+			if(IS_BUTTON_PUSH) 
+			{
+				if(HAL_GetTick()- relese_time >= 30)
+				{
+					push_time = HAL_GetTick();
+					step = STEP2;
+				}
+			}
+		break;
+
+		case STEP2:
+			if(!IS_BUTTON_PUSH) 
+			{
+				push_term = HAL_GetTick() -push_time;
+
+				if(30<push_term && push_term<500)
+				{
+					short_holding_config();
+					step = STEP1;
+				}
+				else if(push_term>1000)
+				{
+					long_holding_config();
+					step = STEP1;
+				}
+				relese_time = HAL_GetTick();
+			}
+		break;
+	}
+	
+}
 void Cold_ON()
 {
 	temp_mode = COLD_MODE;	
