@@ -113,6 +113,7 @@ void Temp_config();
 void Hot_ON();
 void Cold_ON();
 void All_off(uint8_t fan_on_flag);
+void Button_config();
 
 
 

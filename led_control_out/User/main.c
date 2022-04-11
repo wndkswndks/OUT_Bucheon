@@ -46,9 +46,11 @@ void main(void)//////////ttt///eee////lllllqwer
   while (1)
   {
     Led_Pwm_config();//
+    //Button_config();
     Temp_config();
     Low_power_Config();
 
+	
 	//WWDG_SetCounter(125);
 
 
@@ -57,7 +59,6 @@ void main(void)//////////ttt///eee////lllllqwer
 
 
 
-uint8_t led_status = STEP1;
 TEMP_MODE_E temp_mode = HOT_MODE;
 uint8_t on_off_mode = OFF_MODE;
 
@@ -157,7 +158,7 @@ void Button_config()
 		break;
 
 		case STEP2:
-			if(!IS_BUTTON_PUSH) 
+			if(!IS_BUTTON_PUSH || HAL_GetTick() -push_time >1000) 
 			{
 				push_term = HAL_GetTick() -push_time;
 
@@ -293,7 +294,6 @@ void Low_power_Config()
 		last_on_time_ms = HAL_GetTick();
     }
 }
-
 
 #define TIM4_PERIOD       124
 
