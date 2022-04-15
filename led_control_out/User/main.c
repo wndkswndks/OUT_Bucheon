@@ -39,9 +39,10 @@ void main(void)//////////ttt///eee////lllllqwer
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
 
   GPIO_Config();//4PWM 
-  //TIM1_Counter_Init();
+  TIM1_Counter_Init();
   TIM4_Config();
   ADC_Config();
+  TIM1_SetCompare4(0);
 
   //halt();
   while (1)
@@ -189,12 +190,10 @@ void Cold_ON()
 	time_15min_flag = SET;
 	
 	HOT_F1_OFF;
-	HOT_F2_OFF;
 	HOT_LED1_OFF;
 	HOT_LED2_OFF;
 	
 	COLD_F1_ON;
-	COLD_F2_ON;
 	COLD_LED1_ON;
 	COLD_LED2_ON;
 
@@ -209,12 +208,10 @@ void Hot_ON()
 	time_15min_flag = SET;
 	
 	COLD_F1_OFF;
-	COLD_F2_OFF;
 	COLD_LED1_OFF;
 	COLD_LED2_OFF;
 	
 	HOT_F1_ON;
-	HOT_F2_ON;
 	HOT_LED1_ON;
 	HOT_LED2_ON;
 }
@@ -223,11 +220,9 @@ void All_off(uint8_t fan_on_flag)
 {
 	
 	COLD_F1_OFF;
-	COLD_F2_OFF;
 	COLD_LED1_OFF;
 	COLD_LED2_OFF;
 	HOT_F1_OFF;
-	HOT_F2_OFF;
 	HOT_LED1_OFF;
 	HOT_LED2_OFF;
 	if(fan_on_flag == RESET) FAN_OFF;

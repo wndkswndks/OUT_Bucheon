@@ -29,17 +29,12 @@
 
 
 
-#define COLD_F1_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_1);
-#define COLD_F1_OFF	GPIO_WriteLow(GPIOA,GPIO_PIN_1);
+#define COLD_F1_ON	GPIO_WriteHigh(GPIOC,GPIO_PIN_3);//GPIO_WriteHigh(GPIOA,GPIO_PIN_1);
+#define COLD_F1_OFF	GPIO_WriteLow(GPIOC,GPIO_PIN_3);//GPIO_WriteLow(GPIOA,GPIO_PIN_1);
 
-#define COLD_F2_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_2);
-#define COLD_F2_OFF	GPIO_WriteLow(GPIOA,GPIO_PIN_2);
+#define HOT_F1_ON	TIM1_SetCompare4(253);//GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
+#define HOT_F1_OFF	TIM1_SetCompare4(0);//GPIO_WriteLow(GPIOC,GPIO_PIN_4);
 
-#define HOT_F1_ON	GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
-#define HOT_F1_OFF	GPIO_WriteLow(GPIOC,GPIO_PIN_4);
-
-#define HOT_F2_ON	GPIO_WriteHigh(GPIOC,GPIO_PIN_3);
-#define HOT_F2_OFF	GPIO_WriteLow(GPIOC,GPIO_PIN_3);
 
 #define HOT_LED1_ON	GPIO_WriteLow(GPIOC,GPIO_PIN_7);
 #define HOT_LED1_OFF GPIO_WriteHigh(GPIOC,GPIO_PIN_7);	
