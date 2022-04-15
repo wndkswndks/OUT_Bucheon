@@ -39,6 +39,7 @@ void main(void)//////////ttt///eee////lllllqwer
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
 
   GPIO_Config();//4PWM 
+  //TIM1_Counter_Init();
   TIM4_Config();
   ADC_Config();
 

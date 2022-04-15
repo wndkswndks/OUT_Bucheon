@@ -6,5 +6,6 @@
 
 void GPIO_Config();
 void LED_Pwm_ctrl(uint8_t BValue, uint8_t WValue);
+void TIM1_Counter_Init();
 
 #endif
