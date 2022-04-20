@@ -47,8 +47,8 @@ void main(void)//////////ttt///eee////lllllqwer
   //halt();
   while (1)
   {
-    Led_Pwm_config();//
-    //Button_config();
+    //Led_Pwm_config();//
+    Button_config();
     Temp_config();
     Low_power_Config();
 
@@ -160,7 +160,7 @@ void Button_config()
 		break;
 
 		case STEP2:
-			if(!IS_BUTTON_PUSH || HAL_GetTick() -push_time >1000) 
+			if(!IS_BUTTON_PUSH ) 
 			{
 				push_term = HAL_GetTick() -push_time;
 
@@ -169,11 +169,20 @@ void Button_config()
 					short_holding_config();
 					step = STEP1;
 				}
-				else if(push_term>1000)
-				{
+				
+				relese_time = HAL_GetTick();
+			}
+			else if(IS_BUTTON_PUSH && HAL_GetTick() -push_time >1000)
+			{
 					long_holding_config();
-					step = STEP1;
-				}
+					step = STEP3;
+			}
+		break;
+
+		case STEP3:
+			if(!IS_BUTTON_PUSH ) 
+			{
+				step = STEP1;
 				relese_time = HAL_GetTick();
 			}
 		break;
