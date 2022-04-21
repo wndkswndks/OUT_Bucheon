@@ -32,7 +32,7 @@
 #define COLD_F1_ON	GPIO_WriteHigh(GPIOC,GPIO_PIN_3);//GPIO_WriteHigh(GPIOA,GPIO_PIN_1);
 #define COLD_F1_OFF	GPIO_WriteLow(GPIOC,GPIO_PIN_3);//GPIO_WriteLow(GPIOA,GPIO_PIN_1);
 
-#define HOT_F1_ON	TIM1_SetCompare4(253);//GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
+#define HOT_F1_ON	TIM1_SetCompare4(63);//GPIO_WriteHigh(GPIOC,GPIO_PIN_4);
 #define HOT_F1_OFF	TIM1_SetCompare4(0);//GPIO_WriteLow(GPIOC,GPIO_PIN_4);
 
 
@@ -50,6 +50,9 @@
 
 #define FAN_ON  	GPIO_WriteHigh(GPIOA,GPIO_PIN_3);
 #define FAN_OFF 	GPIO_WriteLow(GPIOA,GPIO_PIN_3);
+
+
+
 
 /*  			define end  			*/
 
@@ -107,7 +110,7 @@ float Check_Temp(void);
 void Temp_config();
 void Hot_ON();
 void Cold_ON();
-void All_off(uint8_t fan_on_flag);
+void All_off();
 void Button_config();
 
 

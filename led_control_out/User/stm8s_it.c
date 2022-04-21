@@ -507,9 +507,10 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
 			
 			on_off_mode = OFF_MODE;
 
-			All_off(RESET);		
+			All_off();		
 		}
    }
+
 
    if(time_1min_flag)
    {

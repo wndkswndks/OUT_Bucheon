@@ -225,7 +225,7 @@ void Hot_ON()
 	HOT_LED2_ON;
 }
 
-void All_off(uint8_t fan_on_flag)
+void All_off()
 {
 	
 	COLD_F1_OFF;
@@ -234,11 +234,13 @@ void All_off(uint8_t fan_on_flag)
 	HOT_F1_OFF;
 	HOT_LED1_OFF;
 	HOT_LED2_OFF;
-	if(fan_on_flag == RESET) FAN_OFF;
 		
 
 	time_15min_cnt = 0;
 	time_15min_flag = RESET;
+
+	time_1min_flag = SET;
+	time_1min_cnt = 0;
 }
 void short_holding_config()
 {
@@ -263,10 +265,9 @@ void long_holding_config()
 	{
 		on_off_mode = OFF_MODE;
 		
-		All_off(SET);
+		All_off();
 		
-		time_1min_flag = SET;
-		time_1min_cnt = 0;
+
 		
 	}
 
@@ -454,7 +455,7 @@ void Temp_config()
 		temp_over = SET;
 		on_off_mode = OFF_MODE;
 		
-		All_off(RESET);
+		All_off();
 		
 	}
 
