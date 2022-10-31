@@ -22,7 +22,7 @@
 #define BUTTON_PORT	GPIOD
 #define BUTTON_PIN	GPIO_PIN_3
 
-#define IS_BUTTON_PUSH	(GPIO_ReadInputPin(BUTTON_PORT, GPIO_PIN_3) == 0)
+#define IS_BUTTON_PUSH	(GPIO_ReadInputPin(BUTTON_PORT, BUTTON_PIN) == 0)
 
 #define IS_COLD_ON	GPIO_ReadInputPin(GPIOA, GPIO_PIN_1)
 #define IS_HOT_ON	GPIO_ReadInputPin(GPIOC, GPIO_PIN_4)
@@ -36,20 +36,6 @@
 #define HOT_F1_OFF	TIM1_SetCompare4(0);//GPIO_WriteLow(GPIOC,GPIO_PIN_4);
 
 
-#define HOT_LED1_ON	GPIO_WriteLow(GPIOC,GPIO_PIN_7);
-#define HOT_LED1_OFF GPIO_WriteHigh(GPIOC,GPIO_PIN_7);	
-
-#define HOT_LED2_ON	GPIO_WriteLow(GPIOD,GPIO_PIN_4);
-#define HOT_LED2_OFF GPIO_WriteHigh(GPIOD,GPIO_PIN_4);
-
-#define COLD_LED1_ON   GPIO_WriteLow(GPIOC,GPIO_PIN_5);
-#define COLD_LED1_OFF  GPIO_WriteHigh(GPIOC,GPIO_PIN_5);	
-
-#define COLD_LED2_ON   GPIO_WriteLow(GPIOD,GPIO_PIN_6);
-#define COLD_LED2_OFF  GPIO_WriteHigh(GPIOD,GPIO_PIN_6);
-
-#define FAN_ON  	GPIO_WriteHigh(GPIOA,GPIO_PIN_3);
-#define FAN_OFF 	GPIO_WriteLow(GPIOA,GPIO_PIN_3);
 
 
 
@@ -107,10 +93,7 @@ void Low_power_Config();
 void Delay(uint32_t cnt);
 void ADC_Config(void);
 float Check_Temp(void);
-void Temp_config();
-void Hot_ON();
-void Cold_ON();
-void All_off();
+
 void Button_config();
 
 

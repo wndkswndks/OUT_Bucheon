@@ -507,7 +507,7 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
 			
 			on_off_mode = OFF_MODE;
 
-			All_off();		
+
 		}
    }
 
@@ -520,7 +520,7 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
 		{
 			time_1min_cnt = 0;
 			time_1min_flag = RESET;
-			FAN_OFF;
+
 		}
    }
   TIM4_ClearITPendingBit(TIM4_IT_UPDATE); 

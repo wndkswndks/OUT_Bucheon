@@ -31,7 +31,8 @@
 
 
 extern uint32_t TIM1COUNTER;
-void main(void)//////////ttt///eee////lllllqwer
+float adctest = 0;
+void main(void)
 {
 
   CLK_DeInit();
@@ -42,17 +43,18 @@ void main(void)//////////ttt///eee////lllllqwer
   TIM1_Counter_Init();
   TIM4_Config();
   ADC_Config();
-  TIM1_SetCompare4(0);
+  TIM1_SetCompare3(0);
 
   //halt();
   while (1)
   {
+   adctest = Check_Temp();
+   Delay(100000);
     //Led_Pwm_config();//
     Button_config();
-    Temp_config();
-    Low_power_Config();
+    //Temp_config();
+    //Low_power_Config();
 
-	
 	//WWDG_SetCounter(125);
 
 
@@ -189,98 +191,17 @@ void Button_config()
 	}
 	
 }
-void Cold_ON()
-{
-	temp_mode = COLD_MODE;	
-	time_1min_flag = RESET;
-	time_1min_cnt = 0;
 
-	time_15min_cnt = 0;
-	time_15min_flag = SET;
-	
-	HOT_F1_OFF;
-	HOT_LED1_OFF;
-	HOT_LED2_OFF;
-	
-	COLD_F1_ON;
-	COLD_LED1_ON;
-	COLD_LED2_ON;
 
-}
-void Hot_ON()
-{
-	temp_mode = HOT_MODE;
-	time_1min_flag = RESET;
-	time_1min_cnt = 0;
-
-	time_15min_cnt = 0;
-	time_15min_flag = SET;
-	
-	COLD_F1_OFF;
-	COLD_LED1_OFF;
-	COLD_LED2_OFF;
-	
-	HOT_F1_ON;
-	HOT_LED1_ON;
-	HOT_LED2_ON;
-}
-
-void All_off()
-{
-	
-	COLD_F1_OFF;
-	COLD_LED1_OFF;
-	COLD_LED2_OFF;
-	HOT_F1_OFF;
-	HOT_LED1_OFF;
-	HOT_LED2_OFF;
-		
-
-	time_15min_cnt = 0;
-	time_15min_flag = RESET;
-
-	time_1min_flag = SET;
-	time_1min_cnt = 0;
-}
 void short_holding_config()
 {
 
-	if(on_off_mode == OFF_MODE)return;
-	
-	if(temp_mode == COLD_MODE)
-	{
-		Hot_ON();
-	}
-	else if(temp_mode == HOT_MODE)
-	{	
-		Cold_ON();
-	}
-	
+
 }
 
 
 void long_holding_config()
 {	
-	if(on_off_mode == ON_MODE)
-	{
-		on_off_mode = OFF_MODE;
-		
-		All_off();
-		
-
-		
-	}
-
-	else if(on_off_mode == OFF_MODE)
-	{
-		on_off_mode = ON_MODE;
-
-		Hot_ON();
-
-		FAN_ON;
-
-		temp_over = RESET;
-	}
 
 }
 
@@ -373,109 +294,7 @@ void ADC_Config(void)
 }
 
 
-// -21.78 k옴 
-//-20 -21.78, 
-//-19 -20.59, 
-//-18 -19.41, 
-//-17 -18.24, 
-//-16 -17.08, 
-//-15 -15.93, 
-//-14 -14.78, 
-//-13 -13.64, 
-//-12 -12.50, 
-//-11 -11.38, 
-//-10 -10.26, 
-//-9 -9.15, 
-//-8 -8.04, 
-//-7 -6.94, 
-//-6 -5.85, 
-//-5 -4.76, 
-//-4 -3.68, 
-//-3 -2.61, 
-//-2 -1.54, 
-//-1 -0.48, 
-//0 0.60, 
-//1 1.63, 
-//2 2.68, 
-//3 3.72, 
-//4 4.75, 
-//5 5.78, 
-//6 6.81, 
-//7 7.83, 
-//8 8.84, 
-//9 9.85, 
-//10 10.85, 
-//11 11.85, 
-//12 12.85, 
-//13 13.84, 
-//14 14.83, 
-//15 15.81, 
-//16 16.78, 
-//17 17.75, 
-//18 18.72, 
-//19 19.68, 
-//20 20.64, 
-//21 21.59, 
-//22 22.54, 
-//23 23.49, 
-//24 24.42, 
-//25 25.38, 
-//26 26.29, 
-//27 27.21, 
-//28 28.13, 
-//29 29.05, 
-//30 29.96, 
-//31 30.87, 
-//32 31.77, 
-//33 32.67, 
-//34 33.57, 
-//35 34.45, 
-//36 35.34, 
-//37 36.22, 
-//38 37.09, 
-//39 37.96, 
-//40 38.83, 
-uint32_t GetTick()
-{
-	return TIM1COUNTER;
-}
-
-float temperature = 0;
-
-void Temp_config()
-{
-	float tmp = 0;
-	
-	tmp = Check_Temp();
-
-	if(tmp !=0)temperature = tmp;
-
-	if(temperature >=STOP_TEMP)
-	{
-		temp_over = SET;
-		on_off_mode = OFF_MODE;
-		
-		All_off();
-		
-	}
-
-	if(temp_over==SET && temperature <= RESET_TEMP)
-	{
-		temp_over = RESET;
-		on_off_mode = ON_MODE;
-
-		Hot_ON();
-
-		FAN_ON;
-		
-
-		time_15min_cnt = 0;
-		time_15min_flag = SET;
-
-
-	}
-}
-
+float Vin = 0;
 float Check_Temp(void)
 { 
 	 static uint16_t sum = 0;
@@ -484,7 +303,6 @@ float Check_Temp(void)
 	 static uint8_t getAdc_cnt = 0;
 	 static uint32_t past_time = 0;
 	 static uint8_t step = STEP1;
-	 float Vin = 0;
 	 float temperature_R = 0;
 	 float temp = 0;
 
@@ -508,29 +326,13 @@ float Check_Temp(void)
 		case STEP2:
 			Avg_Conversion_Value = (float)sum / ADC_NUM;
 			sum = 0;
-			Vin = (Avg_Conversion_Value / 1024.0) * 3.0;
-			
-			temperature_R = Vin/(3.0 - Vin) * 10000.0; //3V, 10K옴 저항분배
-			
-			temp = 0.0;
-			// 온도계 데이터 시트 : MF52B 103F3950-100.zh-CN
-			// 엑셀로 저항값들을 나열한뒤 근사치 식을 구했다.
-			// 원래식  Y = 32958 * 2.71828^-0.047X
-			// 원래식을 x에 관한 식으로 변경
-			
-			
-			temp = log(32958/temperature_R)/0.047;
+			Vin = (Avg_Conversion_Value / 1024.0) * 3.3;
 
 			step = STEP1;
-
-			return temp;
 
 		break;
 	 }
 	 
-	 
-
-	 return 0;
  
 }
 
