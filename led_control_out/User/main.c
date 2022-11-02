@@ -32,11 +32,16 @@
 
 extern uint32_t TIM1COUNTER;
 LED_S m_led;
+LED_MEMBER_S m_led_bright;
+LED_MEMBER_S m_led_time;
+
+
 uint8_t batteryCheck = 0;
 
 
 void main(void)
 {
+  
 
   CLK_DeInit();
   /* Initialization of the clock ;Clock divider to HSI/1 */
@@ -49,12 +54,24 @@ void main(void)
   TIM1_SetCompare3(0);
 
   m_led.timeStep = STEP_MIN_5;
+  
+  m_led_bright.GPIOx = GPIOD;
+  m_led_bright.PortPins = GPIO_PIN_4;
+  m_led_bright.fp = LED_Bright;
+  
+  m_led_time.GPIOx = GPIOD;
+  m_led_time.PortPins = GPIO_PIN_3;  
+  m_led_time.fp = LED_Time;
   //halt();
   while (1)
   {
     
-    Button_config_Bright();
-    Button_config_Time();
+//    Button_config_Bright();
+//	Button_config_Time();
+
+    Button_config(&m_led_bright);
+    Button_config(&m_led_time);
+    
     Check_Battery();
     LED_Time_Off();
     //Low_power_Config();
@@ -137,6 +154,61 @@ void Led_Pwm_config()////////
 	
 
 }
+
+void Button_config(LED_MEMBER_S* led)
+{
+//	static uint8_t step = STEP1; 
+//	static uint32_t push_time = 0;
+//	static uint32_t relese_time = 0;
+//	uint32_t push_term = 0;
+	
+	uint8_t buttonStatus = GPIO_ReadInputPin(led->GPIOx, led->PortPins) ;	
+	
+	switch(led->step)
+	{
+		case STEP1:
+			if(buttonStatus == STATUS_PUSH) 
+			{
+				if(HAL_GetTick()- led->relese_time >= 30)
+				{
+					led->push_time = HAL_GetTick();
+					led->step = STEP2;
+				}
+			}
+		break;
+
+		case STEP2:
+			led->push_term = HAL_GetTick() -led->push_time;
+
+			
+			if(buttonStatus != STATUS_PUSH &&(30<led->push_term && led->push_term<500) ) 
+			{
+				//short_holding_config();
+				led->fp();
+				led->cnt++;
+				led->relese_time = HAL_GetTick();
+				led->step = STEP1;
+				
+			}
+			else if(buttonStatus == STATUS_PUSH && led->push_term >1000)
+			{
+				//long_holding_config();
+				led->longcnt++;
+				led->step = STEP3;
+			}
+		break;
+
+		case STEP3:
+			if(buttonStatus != STATUS_PUSH ) 
+			{
+				led->step = STEP1;
+				led->relese_time = HAL_GetTick();
+			}
+		break;
+	}
+	
+}
+
 
 void Button_config_Bright()
 {
@@ -325,7 +397,6 @@ void LED_Time()
 	m_led.timeStep++;
 	if(m_led.timeStep>STEP_MIN_60)m_led.timeStep=STEP_MIN_5;
 
-	TIM1_SetCompare3(m_led.ledBrightStep);
 	TIME_LED_ALLOFF;
 	switch(m_led.timeStep)
 	{
@@ -504,10 +575,28 @@ float Check_Battery(void)
 //			else if((3.9<=Vin)&&(Vin<4.2)) BATTERY_LV3;
 //			else if((3.6<=Vin)&&(Vin<3.9)) BATTERY_LV2;
 //			else if((3.3<=Vin)&&(Vin<3.6)) BATTERY_LV1;
-				if((2.2<=Vin)&&(Vin<3.3)) BATTERY_LV4;
-			else if((1.7<=Vin)&&(Vin<2.2)) BATTERY_LV3;
-			else if((1.0<=Vin)&&(Vin<1.7)) BATTERY_LV2;
-			else if((0.7<=Vin)&&(Vin<1.0)) BATTERY_LV1;
+			if((2.2<=Vin)&&(Vin<3.3)) 
+			{
+				BATTERY_LV4;
+				BATTERY_LV3;
+				BATTERY_LV2;
+				BATTERY_LV1;
+			}
+			else if((1.7<=Vin)&&(Vin<2.2)) 
+			{
+				BATTERY_LV3;
+				BATTERY_LV2;
+				BATTERY_LV1;
+			}
+			else if((1.0<=Vin)&&(Vin<1.7)) 
+			{
+				BATTERY_LV2;
+				BATTERY_LV1;
+			}
+			else if((0.7<=Vin)&&(Vin<1.0)) 
+			{
+				BATTERY_LV1;
+			}
 
 			past_time = HAL_GetTick();
 			step = STEP3;

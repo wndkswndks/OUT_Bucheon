@@ -122,12 +122,17 @@ typedef enum
 
 typedef enum
 {
+	STATUS_PUSH,
+	STATUS_RELESE,
+} LED_BUTTON_E;
+
+typedef enum
+{
 	MIN_5 = 5000,
 	MIN_15 = 15000,
 	MIN_30 = 30000,
 	MIN_60 = 60000,
-} LED_TIME_E;
-
+} LED_PUSH_E;
 
 
 /*  			stuct start  			*/
@@ -137,7 +142,22 @@ typedef struct
 	
 	uint8_t ledBrightStep;
 	uint32_t offTime;
+
 } LED_S;
+
+typedef struct
+{
+	STEP_E step; 
+	uint32_t push_time;
+	uint32_t relese_time;
+	uint32_t push_term;
+	GPIO_TypeDef* GPIOx;
+	GPIO_Pin_TypeDef PortPins;
+	int cnt;
+	int longcnt;
+	void (*fp)(); 
+
+} LED_MEMBER_S;
 
 /*  			stuct end  				*/
 
@@ -155,6 +175,7 @@ void Low_power_Config();
 void Delay(uint32_t cnt);
 void ADC_Config(void);
 float Check_Battery(void);
+void Button_config(LED_MEMBER_S* led);
 
 void Button_config_Bright();
 void Button_config_Time();
