@@ -62,19 +62,17 @@ void main(void)
   m_led_time.GPIOx = GPIOD;
   m_led_time.PortPins = GPIO_PIN_3;  
   m_led_time.fp = LED_Time;
-  //halt();
+
   while (1)
   {
     
-//    Button_config_Bright();
-//	Button_config_Time();
-
     Button_config(&m_led_bright);
     Button_config(&m_led_time);
-    
-    Check_Battery();
     LED_Time_Off();
-    //Low_power_Config();
+    Check_Battery_ADC();
+	Check_Usb_ADC();
+    
+    Low_power_Config();
 
 	//WWDG_SetCounter(125);
 
@@ -513,16 +511,17 @@ void Delay(uint32_t Delay)
 
 void ADC_Config(void)
 {
-  /*  Init GPIO for ADC2 */
+
   GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_FL_NO_IT);
-  
-  /* De-Init ADC peripheral*/
+
+  GPIO_Init(GPIOD, GPIO_PIN_5, GPIO_MODE_IN_FL_NO_IT);
   ADC1_DeInit();
 
-  /* Init ADC2 peripheral */
-  ADC1_Init(ADC1_CONVERSIONMODE_CONTINUOUS, ADC1_CHANNEL_3, ADC1_PRESSEL_FCPU_D2, 
-            ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_RIGHT, ADC1_SCHMITTTRIG_CHANNEL6,
-            DISABLE);
+
+  ADC1_Init(ADC1_CONVERSIONMODE_CONTINUOUS, ADC1_CHANNEL_5, ADC1_PRESSEL_FCPU_D2, 
+  			ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_RIGHT, ADC1_SCHMITTTRIG_CHANNEL6,
+  			DISABLE);
+
 
   /* Enable EOC interrupt */
   //ADC1_ITConfig(ADC1_IT_AWS6, ENABLE);
@@ -535,12 +534,87 @@ void ADC_Config(void)
   
   /*Start Conversion */
   ADC1_StartConversion();
+		
 }
 
 
-float Vin = 0;
-float Check_Battery(void)
+void ADC_Battery_Enable()
+{
+	ADC1_Init(ADC1_CONVERSIONMODE_CONTINUOUS, ADC1_CHANNEL_3, ADC1_PRESSEL_FCPU_D2, 
+			  ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_RIGHT, ADC1_SCHMITTTRIG_CHANNEL6,
+			  DISABLE);
+}
+
+void ADC_Usb_Enable()
+{
+
+	ADC1_Init(ADC1_CONVERSIONMODE_CONTINUOUS, ADC1_CHANNEL_5, ADC1_PRESSEL_FCPU_D2, 
+			  ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_RIGHT, ADC1_SCHMITTTRIG_CHANNEL6,
+			  DISABLE);
+}
+
+float VinUsb = 0;
+float VinBattry = 0;
+
+void Check_Usb_ADC(void)
+{
+	float ADC = 0;
+	 static uint32_t past_time = 0;
+	  static uint32_t on_time = 0;
+	 if(batteryCheck==1) return;
+
+	 if(HAL_GetTick()- past_time >= 500 )
+	 {	
+		
+			ADC = ADC1_GetConversionValue();
+			VinUsb = (ADC / 1024.0) * 3.3;
+
+
+			if(VinUsb>2)
+			{
+				ADC_Battery_Enable();
+				ADC = ADC1_GetConversionValue();
+				ADC_Usb_Enable();
+				VinBattry = (ADC / 1024.0) * 3.3 *3.6875;
+
+				if(4.2<=VinBattry)
+				{
+					BATTERY_LV4;
+					BATTERY_LV3;
+					BATTERY_LV2;
+					BATTERY_LV1;
+				}
+				else if((3.9<=VinBattry)&&(VinBattry<4.2)) 
+				{
+					BATTERY_LV3;
+					BATTERY_LV2;
+					BATTERY_LV1;
+				}
+				else if((3.6<=VinBattry)&&(VinBattry<3.9)) 
+				{
+					BATTERY_LV2;
+					BATTERY_LV1;
+				}
+				else if(VinBattry<3.6)
+				{
+					BATTERY_LV1;
+				}
+				on_time = HAL_GetTick();
+				
+			}
+		
+		past_time = HAL_GetTick();
+	}
+
+	if(HAL_GetTick()- on_time >= 250 )
+	{
+		BATTERY_ALLOFF;
+	}
+}
+
+float Check_Battery_ADC(void)
 { 
+	 float ADC = 0;
 	 static uint16_t sum = 0;
 	 uint8_t ADC_NUM = 10;
 	 static float Avg_Conversion_Value = 0.0;
@@ -552,48 +626,37 @@ float Check_Battery(void)
 	 
 	 switch(step)
 	 {
-		case STEP1:
-			if(HAL_GetTick()- past_time >= 10 && batteryCheck)
-			{
-				sum += ADC1_GetConversionValue();
-				past_time = HAL_GetTick();
-				getAdc_cnt++;
-				if(getAdc_cnt ==10) 
-				{
-					getAdc_cnt = 0;
-					step = STEP2;
-				}
+	 	case STEP1:
+			if(batteryCheck)
+			{	
+				ADC_Battery_Enable();
+				step = STEP2;
 			}
-
-		break;
+	 	break;	 	
 
 		case STEP2:
-			Avg_Conversion_Value = (float)sum / ADC_NUM;
-			sum = 0;
-			Vin = (Avg_Conversion_Value / 1024.0) * 3.3;
-//			    if((4.2<=Vin)&&(Vin<5.1)) BATTERY_LV4;
-//			else if((3.9<=Vin)&&(Vin<4.2)) BATTERY_LV3;
-//			else if((3.6<=Vin)&&(Vin<3.9)) BATTERY_LV2;
-//			else if((3.3<=Vin)&&(Vin<3.6)) BATTERY_LV1;
-			if((2.2<=Vin)&&(Vin<3.3)) 
+			ADC = ADC1_GetConversionValue();
+			VinBattry = (ADC / 1024.0) * 3.3 *3.6875;
+
+			if(4.2<=VinBattry)
 			{
 				BATTERY_LV4;
 				BATTERY_LV3;
 				BATTERY_LV2;
 				BATTERY_LV1;
 			}
-			else if((1.7<=Vin)&&(Vin<2.2)) 
+			else if((3.9<=VinBattry)&&(VinBattry<4.2)) 
 			{
 				BATTERY_LV3;
 				BATTERY_LV2;
 				BATTERY_LV1;
 			}
-			else if((1.0<=Vin)&&(Vin<1.7)) 
+			else if((3.6<=VinBattry)&&(VinBattry<3.9)) 
 			{
 				BATTERY_LV2;
 				BATTERY_LV1;
 			}
-			else if((0.7<=Vin)&&(Vin<1.0)) 
+			else if(VinBattry<3.6)
 			{
 				BATTERY_LV1;
 			}
@@ -604,8 +667,9 @@ float Check_Battery(void)
 		break;
 
 		case STEP3:
-			if(HAL_GetTick()- past_time >= 5000 )
+			if(HAL_GetTick()- past_time >= 3000 )
 			{
+				ADC_Usb_Enable();
 				batteryCheck = 0;
 				BATTERY_ALLOFF;
 				step = STEP1;
@@ -617,6 +681,30 @@ float Check_Battery(void)
  
 }
 
+uint8_t toggle = 0;
+void Battery_Selece()
+{
+	 static uint32_t past_time = 0;
+
+	 if(HAL_GetTick()- past_time >= 8000 )
+	 {
+	 	batteryCheck = 1;
+
+
+		if(toggle ==1)
+		{
+			ADC_Battery_Enable();
+			toggle = 0;
+		}
+		else
+		{
+			ADC_Usb_Enable();
+			toggle = 1;
+		}
+		//Delay(100);
+		past_time = HAL_GetTick();
+	 }
+}
 #ifdef USE_FULL_ASSERT
 
 /**
