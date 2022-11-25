@@ -155,7 +155,8 @@ typedef struct
 	GPIO_Pin_TypeDef PortPins;
 	int cnt;
 	int longcnt;
-	void (*fp)(); 
+	void (*shot_push)(); 
+	void (*long_push)();
 
 } LED_MEMBER_S;
 
@@ -190,6 +191,7 @@ void LED_Time();
 void LED_Time_Off();
 void ADC_Battery_Enable();
 void ADC_Usb_Enable();
+void Dumy_func();
 
 
 

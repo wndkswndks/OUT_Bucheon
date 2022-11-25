@@ -57,11 +57,13 @@ void main(void)
   
   m_led_bright.GPIOx = GPIOD;
   m_led_bright.PortPins = GPIO_PIN_4;
-  m_led_bright.fp = LED_Bright;
+  m_led_bright.shot_push = LED_Bright;
+  m_led_bright.long_push = LED_Bright_Off;
   
   m_led_time.GPIOx = GPIOD;
   m_led_time.PortPins = GPIO_PIN_3;  
-  m_led_time.fp = LED_Time;
+  m_led_time.shot_push = LED_Time;
+  m_led_time.long_push = Dumy_func;
 
   while (1)
   {
@@ -72,7 +74,7 @@ void main(void)
     Check_Battery_ADC();
 	Check_Usb_ADC();
     
-    Low_power_Config();
+    //Low_power_Config();
 
 	//WWDG_SetCounter(125);
 
@@ -182,14 +184,15 @@ void Button_config(LED_MEMBER_S* led)
 			if(buttonStatus != STATUS_PUSH &&(30<led->push_term && led->push_term<500) ) 
 			{
 				//short_holding_config();
-				led->fp();
+				led->shot_push();
 				led->cnt++;
 				led->relese_time = HAL_GetTick();
 				led->step = STEP1;
 				
 			}
-			else if(buttonStatus == STATUS_PUSH && led->push_term >1000)
+			else if(buttonStatus == STATUS_PUSH && led->push_term >2000)
 			{
+				led->long_push();
 				//long_holding_config();
 				led->longcnt++;
 				led->step = STEP3;
@@ -389,7 +392,10 @@ void LED_Bright_Off()
 	m_led.ledBrightStep = BRIGHT_0;
 	TIM1_SetCompare3(0);
 }
-
+void Dumy_func()
+{
+	
+}
 void LED_Time()
 {
 	m_led.timeStep++;
@@ -567,7 +573,7 @@ void Check_Usb_ADC(void)
 	 {	
 		
 			ADC = ADC1_GetConversionValue();
-			VinUsb = (ADC / 1024.0) * 3.3;
+			VinUsb = (ADC / 1024.0) * 3.0;
 
 
 			if(VinUsb>2)
@@ -575,7 +581,7 @@ void Check_Usb_ADC(void)
 				ADC_Battery_Enable();
 				ADC = ADC1_GetConversionValue();
 				ADC_Usb_Enable();
-				VinBattry = (ADC / 1024.0) * 3.3 *3.6875;
+				VinBattry = (ADC / 1024.0) * 3.0 *1.40;//*3.6875;
 
 				if(4.2<=VinBattry)
 				{
@@ -636,7 +642,7 @@ float Check_Battery_ADC(void)
 
 		case STEP2:
 			ADC = ADC1_GetConversionValue();
-			VinBattry = (ADC / 1024.0) * 3.3 *3.6875;
+			VinBattry = (ADC / 1024.0) * 3.0 *1.40;
 
 			if(4.2<=VinBattry)
 			{
@@ -645,18 +651,18 @@ float Check_Battery_ADC(void)
 				BATTERY_LV2;
 				BATTERY_LV1;
 			}
-			else if((3.9<=VinBattry)&&(VinBattry<4.2)) 
+			else if((3.85<=VinBattry)&&(VinBattry<4.2)) 
 			{
 				BATTERY_LV3;
 				BATTERY_LV2;
 				BATTERY_LV1;
 			}
-			else if((3.6<=VinBattry)&&(VinBattry<3.9)) 
+			else if((3.5<=VinBattry)&&(VinBattry<3.85)) 
 			{
 				BATTERY_LV2;
 				BATTERY_LV1;
 			}
-			else if(VinBattry<3.6)
+			else if(VinBattry<3.5)
 			{
 				BATTERY_LV1;
 			}
