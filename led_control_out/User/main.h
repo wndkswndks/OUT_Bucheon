@@ -22,19 +22,19 @@
 #define BUTTON_PORT	GPIOD
 #define BUTTON_PIN	GPIO_PIN_3
 
-#define IS_BUTTON_PUSH	(GPIO_ReadInputPin(GPIOD, GPIO_PIN_3) == 0)
+#define IS_BUTTON_PUSH()	(GPIO_ReadInputPin(GPIOD, GPIO_PIN_3) == 0)
 #define IS_TOUCH_PUSH	(GPIO_ReadInputPin(GPIOD, GPIO_PIN_4) == 0)
 
 
 #define IS_COLD_ON	GPIO_ReadInputPin(GPIOA, GPIO_PIN_1)
 #define IS_HOT_ON	GPIO_ReadInputPin(GPIOC, GPIO_PIN_4)
 
-#define TIME_5MIN_LED_ON	GPIO_WriteHigh(GPIOD,GPIO_PIN_6)
-#define TIME_15MIN_LED_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_1)
-#define TIME_30MIN_LED_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_2)
-#define TIME_60MIN_LED_ON	GPIO_WriteHigh(GPIOA,GPIO_PIN_3)
+#define TIME_5MIN_LED_ON()	GPIO_WriteHigh(GPIOD,GPIO_PIN_6)
+#define TIME_15MIN_LED_ON()	GPIO_WriteHigh(GPIOA,GPIO_PIN_1)
+#define TIME_30MIN_LED_ON()	GPIO_WriteHigh(GPIOA,GPIO_PIN_2)
+#define TIME_60MIN_LED_ON()	GPIO_WriteHigh(GPIOA,GPIO_PIN_3)
 
-#define TIME_LED_ALLOFF	GPIO_WriteLow(GPIOD,GPIO_PIN_6);\
+#define TIME_LED_ALLOFF() GPIO_WriteLow(GPIOD,GPIO_PIN_6);\
 						GPIO_WriteLow(GPIOA,GPIO_PIN_1);\
 						GPIO_WriteLow(GPIOA,GPIO_PIN_2);\
 						GPIO_WriteLow(GPIOA,GPIO_PIN_3);
@@ -114,7 +114,8 @@ typedef enum
 
 typedef enum
 {
-	STEP_MIN_5 = 1,
+	STEP_MIN_INFINITE = 1,
+	STEP_MIN_5,
 	STEP_MIN_15,
 	STEP_MIN_30,
 	STEP_MIN_60,
@@ -128,10 +129,10 @@ typedef enum
 
 typedef enum
 {
-	MIN_5 = 5000,
-	MIN_15 = 15000,
-	MIN_30 = 30000,
-	MIN_60 = 60000,
+	MIN_5 = 60000,
+	MIN_15 = 180000,
+	MIN_30 = 360000,
+	MIN_60 = 720000,
 } LED_PUSH_E;
 
 
@@ -140,8 +141,10 @@ typedef struct
 {
 	LED_TIME_STEP_E timeStep;
 	
-	uint8_t ledBrightStep;
+	uint8_t BrightStep;
 	uint32_t offTime;
+	uint8_t OffFlag;
+	uint8_t infiniteOn;
 
 } LED_S;
 

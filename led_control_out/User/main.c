@@ -53,8 +53,8 @@ void main(void)
   ADC_Config();
   TIM1_SetCompare3(0);
 
-  m_led.timeStep = STEP_MIN_5;
-  
+  m_led.timeStep = STEP_MIN_INFINITE;
+  m_led.infiniteOn = 1;
   m_led_bright.GPIOx = GPIOD;
   m_led_bright.PortPins = GPIO_PIN_4;
   m_led_bright.shot_push = LED_Bright;
@@ -65,9 +65,12 @@ void main(void)
   m_led_time.shot_push = LED_Time;
   m_led_time.long_push = Dumy_func;
 
+  m_led.OffFlag = 1;
+
   while (1)
   {
-    
+//    Button_config_Bright();
+//    Button_config_Time();
     Button_config(&m_led_bright);
     Button_config(&m_led_time);
     LED_Time_Off();
@@ -210,7 +213,7 @@ void Button_config(LED_MEMBER_S* led)
 	
 }
 
-
+uint8_t wwww;
 void Button_config_Bright()
 {
 	static uint8_t step = STEP1; 
@@ -220,6 +223,7 @@ void Button_config_Bright()
 	uint8_t buttonStatus = 0;	
 	
 	buttonStatus = IS_TOUCH_PUSH; 
+	wwww = IS_TOUCH_PUSH; 
 	switch(step)
 	{
 		case STEP1:
@@ -277,7 +281,7 @@ void Button_config_Time()
 	uint8_t buttonStatus = 0;
 	
 	
-	buttonStatus = IS_BUTTON_PUSH;
+	buttonStatus = IS_BUTTON_PUSH();
 	switch(step)
 	{
 		case STEP1:
@@ -331,66 +335,67 @@ void LED_Bright()
 	{
 		switch(m_led.timeStep)
 		{
+			case STEP_MIN_INFINITE:
+				m_led.infiniteOn = 1;
+			break;
+			
 			case STEP_MIN_5:
-				TIME_5MIN_LED_ON;
+				TIME_5MIN_LED_ON();
 				m_led.offTime = HAL_GetTick() + (uint32_t)MIN_5;
 			break;
 
 			case STEP_MIN_15:
-				TIME_15MIN_LED_ON;
+				TIME_15MIN_LED_ON();
 				m_led.offTime = HAL_GetTick() + (uint32_t)MIN_15;
 			break;
 
 			case STEP_MIN_30:
-				TIME_30MIN_LED_ON;
+				TIME_30MIN_LED_ON();
 				m_led.offTime = HAL_GetTick() + (uint32_t)MIN_30;
 			break;
 
 			case STEP_MIN_60:
-				TIME_60MIN_LED_ON;
+				TIME_60MIN_LED_ON();
 				m_led.offTime = HAL_GetTick() + (uint32_t)MIN_60;
 			break;
 			
 		}
 	}
-	
-	switch(m_led.ledBrightStep)
+	if(m_led.OffFlag)
+	{
+		m_led.OffFlag = 0;
+		batteryCheck = 1;
+		
+	}
+
+	switch(m_led.BrightStep)
 	{
 		case BRIGHT_0 :
-			batteryCheck = 1;
-			for(int i =0 ;i < 5;i++)
-			{
-				m_led.ledBrightStep += 10;
-				TIM1_SetCompare3(m_led.ledBrightStep);
-				Delay(100);
-			}
-		break;	
-
 		case BRIGHT_1 :
 		case BRIGHT_2 :
 		case BRIGHT_3 :
 		case BRIGHT_4 :
-			for(int i =0 ;i < 5;i++)
+			for(int i =0 ;i < 50;i++)
 			{
-				m_led.ledBrightStep += 10;
-				TIM1_SetCompare3(m_led.ledBrightStep);
-				Delay(100);
+				m_led.BrightStep += 1;
+				TIM1_SetCompare3(m_led.BrightStep);
+				Delay(10);
 			}
 		break;
 
 		case BRIGHT_5 :
-			m_led.ledBrightStep = BRIGHT_1;
-			TIM1_SetCompare3(m_led.ledBrightStep);
+			m_led.BrightStep = BRIGHT_1;
+			TIM1_SetCompare3(m_led.BrightStep);
 		break;
 	}
 
 }
 void LED_Bright_Off()
 {
-	TIME_LED_ALLOFF;
+	TIME_LED_ALLOFF();
 	m_led.offTime = 0;
-	m_led.ledBrightStep = BRIGHT_0;
 	TIM1_SetCompare3(0);
+	m_led.OffFlag =1 ;
 }
 void Dumy_func()
 {
@@ -398,29 +403,36 @@ void Dumy_func()
 }
 void LED_Time()
 {
+	//if(TIM1_GetCapture3() == BRIGHT_0)return;
+	
 	m_led.timeStep++;
-	if(m_led.timeStep>STEP_MIN_60)m_led.timeStep=STEP_MIN_5;
+	if(m_led.timeStep>STEP_MIN_60)m_led.timeStep=STEP_MIN_INFINITE;
 
-	TIME_LED_ALLOFF;
+	TIME_LED_ALLOFF();
 	switch(m_led.timeStep)
-	{
+	{	
+		case STEP_MIN_INFINITE:
+			m_led.infiniteOn = 1;
+		break;
+		
 		case STEP_MIN_5:
-			TIME_5MIN_LED_ON;
+			TIME_5MIN_LED_ON();
 			m_led.offTime = HAL_GetTick() + (uint32_t)MIN_5;
+			m_led.infiniteOn = 0;
 		break;
 
 		case STEP_MIN_15:
-			TIME_15MIN_LED_ON;
+			TIME_15MIN_LED_ON();
 			m_led.offTime = HAL_GetTick() + (uint32_t)MIN_15;
 		break;
 
 		case STEP_MIN_30:
-			TIME_30MIN_LED_ON;
+			TIME_30MIN_LED_ON();
 			m_led.offTime = HAL_GetTick() + (uint32_t)MIN_30;
 		break;
 
 		case STEP_MIN_60:
-			TIME_60MIN_LED_ON;
+			TIME_60MIN_LED_ON();
 			m_led.offTime = HAL_GetTick() + (uint32_t)MIN_60;
 		break;
 	}
@@ -428,11 +440,11 @@ void LED_Time()
 
 void LED_Time_Off()
 {
-	if(HAL_GetTick() > m_led.offTime)
+	if(HAL_GetTick() > m_led.offTime && m_led.infiniteOn ==0)
 	{
 		TIM1_SetCompare3(0);
-		TIME_LED_ALLOFF;
-		m_led.ledBrightStep = BRIGHT_0;
+		TIME_LED_ALLOFF();
+		m_led.OffFlag =1 ;
 	}
 }
 
@@ -612,10 +624,7 @@ void Check_Usb_ADC(void)
 		past_time = HAL_GetTick();
 	}
 
-	if(HAL_GetTick()- on_time >= 250 )
-	{
-		BATTERY_ALLOFF;
-	}
+
 }
 
 float Check_Battery_ADC(void)
